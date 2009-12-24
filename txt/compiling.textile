@@ -2,17 +2,17 @@ h3. Current goals
 
 * -Sending packets.-
 * -Set <code>main</code> to increment tos.-
-* -Sending forth word-
-* -Sending numbers-
-* -Sending quotes-
-* -Storing forth word-
-* -VM words-
-* -VM numbers-
-* -VM quotes-
-* Send execute word
-* VM save
-* VM load
-* Conditional
+* -Sending forth word.-
+* -Sending numbers.-
+* -Sending quotes.-
+* -Storing forth word.-
+* -VM words.-
+* -VM numbers.-
+* -VM quotes.-
+* Send execute word.
+* VM save.
+* VM load.
+* Conditional.
 
 
 h3. Network packet
