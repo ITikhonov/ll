@@ -66,7 +66,7 @@ restart:	switch(*v){
 						uint64_t *pp=(uint64_t*)(pkt+3+(last<<3));
 						int q=last;
 						last=*(int16_t*)pp;
-						*pp=(n-q-1)|(0x71ll<<56);
+						*pp=(n-q-1)|((uint64_t)('@')<<56);
 						printf("\n]]] %d\n",last);
 						sp=1;
 					}
