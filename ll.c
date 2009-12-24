@@ -89,7 +89,7 @@ int main(int argc,char *argv[]) {
 					*(int32_t*)(addrs[n]+1)=((uint8_t*)llvm)-((uint8_t*)d);
 					printf("llvm:%p - d:%p = %08lx\n", llvm, d, ((uint8_t*)llvm)-((uint8_t*)d));
 					int i; for(i=0;i<l;i++) {
-						if(0xff00000000000000ll&*p) { *d=*p; } else { *d=find(*p); }
+						if((char)*p) { *d=*p; } else { *d=find(*p)<<8; }
 						d++; p++;
 					}
 				}
@@ -104,10 +104,10 @@ int main(int argc,char *argv[]) {
 							uint64_t *p=(uint64_t*)(addrs[i]+5);
 							uint64_t *e=(uint64_t*)(addrs[i]+lens[i]);
 							for(;p<e;p++) {
-								if(0xff00000000000000ll&*p) {
-									printf("%c%lu ",(char)(*p>>56),0xffffffffffffff&*p);
+								if((char)*p) {
+									printf("%c%lu ",(char)*p,*p>>8);
 								} else {
-									printf("%s ",(char*)(names+*p));
+									printf("%.7s[%d] ",(char*)(names+(*p>>8))+1,(int)*p>>8);
 								}
 							}
 							}

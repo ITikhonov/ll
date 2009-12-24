@@ -10,8 +10,11 @@
 <p><strike>Sending quotes</strike></p>
 <p><strike>Storing forth word</strike></p>
 <p><strike>VM words</strike></p>
-<p>VM numbers</p>
+<p><strike>VM numbers</strike></p>
 <p>VM quotes</p>
+<p>Send execute word</p>
+<p>VM save</p>
+<p>VM load</p>
 
 
 <h3>Network packet</h3>
@@ -58,7 +61,7 @@
 <p>On entering in vm code top of return stack holds address of first forth word index on stack. So vm code need to lookup
 address from def table and execute call to it. On return advance to next forth word and repeat.</p>
 
-<p>On amd64 address of current forth word on top of return stack, %rdi is used for address resulution and for indirect call.</p>
+<p>On amd64 address of current forth word on top of return stack, %rdx is used for address resulution and for indirect call.</p>
 
 <p>When assembler word is called return stack holds [ vm ret, forth word pointer ] so we need to pop both in ';' word.</p>
 

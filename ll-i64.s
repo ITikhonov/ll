@@ -23,10 +23,25 @@ llcall:
 	ret
 
 llvm:
-	movq	(%rsp),%rdi
-	movq	(%rdi),%rdi
-	movq	addrs(,%rdi,8),%rdi
-	call	*%rdi
+	movq	(%rsp),%rdx
+	movq	(%rdx),%rdx
+
+	cmpb	$'$',%dl
+	je	.llvm.num
+
+	shrq	$8,%rdx
+	movq	addrs(,%rdx,8),%rdx
+	call	*%rdx
+	jmp	.llvm.end
+
+.llvm.num:
+	shrq	$8,%rdx
+	leaq	-8(%rsi),%rsi
+	movq	%rax,(%rsi)
+	movq	%rdx,%rax
+	jmp	.llvm.end
+
+.llvm.end:
 	addl	$8,(%rsp)
 	jmp	llvm
 
