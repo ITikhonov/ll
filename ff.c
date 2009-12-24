@@ -48,13 +48,11 @@ restart:	switch(*v){
 				sp=0;
 				switch(*v) {
  				case '$':
-					t='$';
-					int odd=0;
-					for(v++;;v++){
+					{ int num=0; for(v++;;v++){
 						int x=H(*v);
-						if(x<0||x>15) break;
-						if(odd) { *p++|=x; odd=0; } else { *p=x<<4; odd=1; }
-					}
+						if(x<0||x>15) { sp=1; *(uint64_t*)p=num|((uint64_t)('$')<<56); p+=8; n++; break; }
+						num<<=4; num|=x;
+					}}
 					goto restart;
 				case '[':
 					*(uint16_t*)p=last; last=(p-(pkt+3))>>3;
@@ -80,6 +78,7 @@ restart:	switch(*v){
 		if(!*v) break;
 	}
 
+	n--;
 	pkt[1]=n&0xff;
 	pkt[2]=n>>8;
 

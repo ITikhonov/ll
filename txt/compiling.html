@@ -24,7 +24,7 @@
 
 <p>Network packet for forth word consists of type byte, and 16-bit length of sequence and sequence of 8-byte names.</p>
 <pre>./ff 'fact [ drop $1 ] [ dup $1 - fact * ] dup $1 = if ;'
-'F' 14 00 "fact" q2 "drop" $1 q5 "dup" $1... ";"</pre>
+'F' 14 00 "fact" @2 "drop" $1 @5 "dup" $1... ";"</pre>
 
 
 <h3>Machine code words</h3>
@@ -39,7 +39,7 @@
 
 <p>Word <code>fact</code> is associated with pointer to memory area holding vm execution prefix and 32-bit indexes and values.</p>
 
-<pre>e8 aa aa aa aa [dup] [$1] [=] [@2] [drop] [$1] [@5] [dup] [$1] [-] [fact] [*] [dup] [$1] [=] [if] [;]</pre>
+<pre>e8 aa aa aa aa [@2] [drop] [$1] [@5] [dup] [$1] [-] [fact] [*] [dup] [$1] [=] [if] [;]</pre>
 
 <h3>Data words</h3>
 
