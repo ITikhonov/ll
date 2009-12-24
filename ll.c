@@ -35,7 +35,7 @@ int main(int argc,char *argv[]) {
 		unsigned char b[1024];
 		if(recv(s,b,1024,0)>0) {
 			printf("pkt\n");
-			int n,fr,sn=*(uint64_t*)(b+1);
+			int n,fr,sn=*(uint64_t*)(b+3);
 			for(n=0;n<512;n++) {
 				if(!defs[n].data) { fr=0; break; }
 				if(names[n]==sn) { goto found; }
@@ -48,7 +48,7 @@ int main(int argc,char *argv[]) {
 found:			switch(b[0]){
 			case 'A':
 			case 'D': {
-					int l=*(uint16_t*)(b+9);
+					int l=*(uint16_t*)(b+1);
 					defs[n].t=b[0];
 					defs[n].data=realloc(defs[n].data,defs[n].len=l);
 					memcpy(defs[n].data,b+11,l);

@@ -13,11 +13,11 @@ int main(int argc,char *argv[]) {
 	struct sockaddr_in a={.sin_family=AF_INET,.sin_port=htons(1233),.sin_addr={htonl(0x7f000001)}};
 	connect(s,(struct sockaddr*)&a,sizeof(a));
 
-	unsigned char pkt[65535]={argv[1][0]}, *p=pkt+1;
+	unsigned char pkt[65535]={argv[1][0]}, *p=pkt+3;
 
 	memset(p,0,8);
 	strncpy(p,argv[2],8);
-	p+=10;
+	p+=8;
 
 	int n;
 	for(n=3;n<argc;n++) {
@@ -27,8 +27,8 @@ int main(int argc,char *argv[]) {
 	}
 
 	n-=3;
-	pkt[9]=n&0xff;
-	pkt[10]=n>>8;
+	pkt[1]=n&0xff;
+	pkt[2]=n>>8;
 
 	send(s,pkt,p-pkt,0);
 }
