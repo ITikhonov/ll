@@ -28,6 +28,8 @@ llvm:
 
 	cmpb	$'$',%dl
 	je	.llvm.num
+	cmpb	$'@',%dl
+	je	.llvm.q
 
 	shrq	$8,%rdx
 	movq	addrs(,%rdx,8),%rdx
@@ -41,7 +43,18 @@ llvm:
 	movq	%rdx,%rax
 	jmp	.llvm.end
 
+.llvm.q:
+	leaq	-8(%rsi),%rsi
+	movq	%rax,(%rsi)
+	movq	(%rsp),%rax
+	shrq	$8,%rdx
+	shlq	$3,%rdx
+	addq	%rdx,(%rsp)
+	jmp	.llvm.end
+
 .llvm.end:
-	addl	$8,(%rsp)
+	addq	$8,(%rsp)
 	jmp	llvm
+
+.lf:	.byte	0xa
 
