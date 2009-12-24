@@ -52,8 +52,8 @@ int main(int argc,char *argv[]) {
 	memset(lens,0,sizeof(lens));
 	memset(types,0,sizeof(types));
 
-	{	find(*(uint64_t*)"main\0\0\0");
-		int n=find(*(uint64_t*)";\0\0\0\0\0\0");
+	{	find(*(uint64_t*)"\0main\0\0");
+		int n=find(*(uint64_t*)"\0;\0\0\0\0\0");
 		addrs[n]=realloc(addrs[n],5);
 		((uint8_t*)addrs[n])[0]=0x48;
 		((uint8_t*)addrs[n])[1]=0x83;
@@ -98,7 +98,7 @@ int main(int argc,char *argv[]) {
 				{
 					int i; for(i=0;i<512;i++) {
 						if(!addrs[i]) continue;
-						printf("%.8s[%c] ",(char *)(names+i),types[i]);
+						printf("%.7s[%c] ",((char *)(names+i))+1,types[i]);
 						switch(types[i]) {
 						case 'F': {
 							uint64_t *p=(uint64_t*)(addrs[i]+5);

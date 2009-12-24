@@ -16,7 +16,7 @@ int main(int argc,char *argv[]) {
 	unsigned char pkt[65535]={argv[1][0]}, *p=pkt+3;
 
 	memset(p,0,8);
-	strncpy(p,argv[2],8);
+	strncpy(p+1,argv[2],7);
 	p+=8;
 
 	int n;

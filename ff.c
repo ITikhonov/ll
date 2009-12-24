@@ -31,7 +31,7 @@ int main(int argc,char *argv[]) {
 
 	unsigned char pkt[65535]={'F'}, *p=pkt+3, t=0;
 
-	int n=0,sp=0,last=-1; char *v=argv[1];
+	int n=0,sp=1,last=-1; char *v=argv[1];
 	for(;;v++){
 restart:	switch(*v){
 		case ' ':
@@ -48,9 +48,9 @@ restart:	switch(*v){
 				sp=0;
 				switch(*v) {
  				case '$':
-					{ int num=0; for(v++;;v++){
+					{ uint64_t num=0; for(v++;;v++){
 						int x=H(*v);
-						if(x<0||x>15) { sp=1; *(uint64_t*)p=num|((uint64_t)('$')<<56); p+=8; n++; break; }
+						if(x<0||x>15) { sp=1; *(uint64_t*)p=(num<<8)|'$'; p+=8; n++; break; }
 						num<<=4; num|=x;
 					}}
 					goto restart;
@@ -64,12 +64,13 @@ restart:	switch(*v){
 						uint64_t *pp=(uint64_t*)(pkt+3+(last<<3));
 						int q=last;
 						last=*(int16_t*)pp;
-						*pp=(n-q-1)|((uint64_t)('@')<<56);
+						*pp=((n-q-1)<<8)|'@';
 						printf("\n]]] %d\n",last);
 						sp=1;
 					}
 					continue;
-				default:;
+				default:
+					*p++=0;
 				}
 			}
 			sp=0;
