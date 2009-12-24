@@ -11,10 +11,11 @@ extern uint64_t llstack[16];
 extern uint64_t *llsp;
 extern void llcall(void *p);
 
-struct def { char t; unsigned char *data; int len; };
 
 uint64_t names[512];
-struct def defs[512];
+void *addrs[512];
+int lens[512];
+char types[512];
 
 int find(uint64_t w) {
 	int fr=0,n;
@@ -22,21 +23,21 @@ int find(uint64_t w) {
 	printf("find %lx\n",w);
 	for(n=0;n<512;n++) {
 		printf("  search/f %d(%lx)\n",n,names[n]);
-		if(!defs[n].data) { fr=n; break; }
+		if(!addrs[n]) { fr=n; break; }
 		if(names[n]==w) { return n; }
 	}
 
 	printf("free %d\n",fr);
 
 	for(;n<512;n++) {
-		if(defs[n].data) printf("  search   %d(%lx)\n",n,names[n]);
+		if(addrs[n]) printf("  search   %d(%lx)\n",n,names[n]);
 		if(names[n]==w) { return n; }
 	}
 
 	n=fr; names[n]=w;
 	printf("  usefree  %d\n",n);
-	defs[n].t='A'; defs[n].data=malloc(defs[n].len=1);
-	defs[n].data[0]=0xc3;
+	types[n]='A'; addrs[n]=malloc(lens[n]=1);
+	*(unsigned char*)addrs[n]=0xc3;
 	return n;
 }
 
@@ -46,7 +47,9 @@ int main(int argc,char *argv[]) {
 	bind(s,(struct sockaddr*)&a,sizeof(a));
 	fcntl(s, F_SETFL, O_NONBLOCK);
 	memset(names,0,sizeof(names));
-	memset(defs,0,sizeof(defs));
+	memset(addrs,0,sizeof(addrs));
+	memset(lens,0,sizeof(lens));
+	memset(types,0,sizeof(types));
 
 	find(*(uint64_t*)"main\0\0\0");
 
@@ -63,16 +66,16 @@ int main(int argc,char *argv[]) {
 			switch(b[0]){
 			case 'A':
 			case 'D':
-				defs[n].t=b[0];
-				defs[n].data=realloc(defs[n].data,defs[n].len=l);
-				memcpy(defs[n].data,b+11,l);
+				types[n]=b[0];
+				addrs[n]=realloc(addrs[n],lens[n]=l);
+				memcpy(addrs[n],b+11,l);
 				break;
 			case 'F': 
-				defs[n].t=b[0];
-				defs[n].data=realloc(defs[n].data,defs[n].len=l*8);
+				types[n]=b[0];
+				addrs[n]=realloc(addrs[n],lens[n]=l*8);
 				{
 					uint64_t *p=(uint64_t*)(b+11);
-					uint64_t *d=(uint64_t*)defs[n].data;
+					uint64_t *d=(uint64_t*)addrs[n];
 					int i; for(i=0;i<l;i++) {
 						if(0xff00000000000000ll&*p) { *d=*p; } else { *d=find(*p); }
 						d++; p++;
@@ -82,12 +85,12 @@ int main(int argc,char *argv[]) {
 			case 'L':
 				{
 					int i; for(i=0;i<512;i++) {
-						if(!defs[i].data) continue;
-						printf("%.8s[%c] ",(char *)(names+i),defs[i].t);
-						switch(defs[i].t) {
+						if(!addrs[i]) continue;
+						printf("%.8s[%c] ",(char *)(names+i),types[i]);
+						switch(types[i]) {
 						case 'F': {
-							uint64_t *p=(uint64_t*)defs[i].data;
-							uint64_t *e=(uint64_t*)(defs[i].data+defs[i].len);
+							uint64_t *p=(uint64_t*)addrs[i];
+							uint64_t *e=(uint64_t*)(addrs[i]+lens[i]);
 							for(;p<e;p++) {
 								if(0xff00000000000000ll&*p) {
 									printf("%c%lu ",(char)(*p>>56),0xffffffffffffff&*p);
@@ -106,7 +109,7 @@ int main(int argc,char *argv[]) {
 			default:;
 			}
 		}
-		llcall(defs[0].data);
+		llcall(addrs[0]);
 	}
 }
 
