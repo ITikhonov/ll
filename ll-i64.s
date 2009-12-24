@@ -1,6 +1,7 @@
 .globl	llsp
 .globl	llstack
 .globl	llcall
+.globl	llvm
 
 .data
 
@@ -20,4 +21,12 @@ llcall:
 	movq	%rax,(%rsi)
 	movq	%rsi,llsp
 	ret
-	
+
+llvm:
+	movq	(%rsp),%rdi
+	movq	(%rdi),%rdi
+	movq	addrs(,%rdi,8),%rdi
+	call	*%rdi
+	addl	$8,(%rsp)
+	jmp	llvm
+

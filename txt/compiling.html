@@ -9,7 +9,7 @@
 <p><strike>Sending numbers</strike></p>
 <p><strike>Sending quotes</strike></p>
 <p><strike>Storing forth word</strike></p>
-<p>VM words</p>
+<p><strike>VM words</strike></p>
 <p>VM numbers</p>
 <p>VM quotes</p>
 
@@ -50,5 +50,18 @@
 <p>Word <code>d</code> is associated with pointer to memory area holding data execution prefix and raw bytes <code>11 22</code>&hellip;</p>
 
 <pre>e8 bb bb bb bb 11 22 33 44</pre>
+
+<h3>VM</h3>
+
+<p>Each forth word is prefixed call to vm machine code so every word can be executed like ordinary machine code.</p>
+
+<p>On entering in vm code top of return stack holds address of first forth word index on stack. So vm code need to lookup
+address from def table and execute call to it. On return advance to next forth word and repeat.</p>
+
+<p>On amd64 address of current forth word on top of return stack, %rdi is used for address resulution and for indirect call.</p>
+
+<p>When assembler word is called return stack holds [ vm ret, forth word pointer ] so we need to pop both in ';' word.</p>
+
+
 
 </body></html>

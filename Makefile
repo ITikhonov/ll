@@ -1,4 +1,5 @@
 CFLAGS=-g
+ASFLAGS=-g
 
 all: ll ss ff
 

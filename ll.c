@@ -10,6 +10,7 @@
 extern uint64_t llstack[16];
 extern uint64_t *llsp;
 extern void llcall(void *p);
+extern void llvm();
 
 
 uint64_t names[512];
@@ -51,7 +52,15 @@ int main(int argc,char *argv[]) {
 	memset(lens,0,sizeof(lens));
 	memset(types,0,sizeof(types));
 
-	find(*(uint64_t*)"main\0\0\0");
+	{	find(*(uint64_t*)"main\0\0\0");
+		int n=find(*(uint64_t*)";\0\0\0\0\0\0");
+		addrs[n]=realloc(addrs[n],5);
+		((uint8_t*)addrs[n])[0]=0x48;
+		((uint8_t*)addrs[n])[1]=0x83;
+		((uint8_t*)addrs[n])[2]=0xc4;
+		((uint8_t*)addrs[n])[3]=0x10;
+		((uint8_t*)addrs[n])[4]=0xc3;
+	}
 
 	llsp--;
 
@@ -70,12 +79,15 @@ int main(int argc,char *argv[]) {
 				addrs[n]=realloc(addrs[n],lens[n]=l);
 				memcpy(addrs[n],b+11,l);
 				break;
-			case 'F': 
+			case 'F':
 				types[n]=b[0];
-				addrs[n]=realloc(addrs[n],lens[n]=l*8);
+				addrs[n]=realloc(addrs[n],lens[n]=l*8+5);
 				{
 					uint64_t *p=(uint64_t*)(b+11);
-					uint64_t *d=(uint64_t*)addrs[n];
+					uint64_t *d=(uint64_t*)(addrs[n]+5);
+					*(uint8_t*)addrs[n]=0xe8;
+					*(int32_t*)(addrs[n]+1)=((uint8_t*)llvm)-((uint8_t*)d);
+					printf("llvm:%p - d:%p = %08lx\n", llvm, d, ((uint8_t*)llvm)-((uint8_t*)d));
 					int i; for(i=0;i<l;i++) {
 						if(0xff00000000000000ll&*p) { *d=*p; } else { *d=find(*p); }
 						d++; p++;
@@ -89,7 +101,7 @@ int main(int argc,char *argv[]) {
 						printf("%.8s[%c] ",(char *)(names+i),types[i]);
 						switch(types[i]) {
 						case 'F': {
-							uint64_t *p=(uint64_t*)addrs[i];
+							uint64_t *p=(uint64_t*)(addrs[i]+5);
 							uint64_t *e=(uint64_t*)(addrs[i]+lens[i]);
 							for(;p<e;p++) {
 								if(0xff00000000000000ll&*p) {
@@ -106,6 +118,9 @@ int main(int argc,char *argv[]) {
 					printf("%ld\n",*llsp);
 					
 				}
+			case 'E':
+				llcall(addrs[n]);
+				break;
 			default:;
 			}
 		}
