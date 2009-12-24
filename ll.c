@@ -21,22 +21,16 @@ char types[512];
 int find(uint64_t w) {
 	int fr=0,n;
 
-	printf("find %lx\n",w);
 	for(n=0;n<512;n++) {
-		printf("  search/f %d(%lx)\n",n,names[n]);
 		if(!addrs[n]) { fr=n; break; }
 		if(names[n]==w) { return n; }
 	}
 
-	printf("free %d\n",fr);
-
 	for(;n<512;n++) {
-		if(addrs[n]) printf("  search   %d(%lx)\n",n,names[n]);
 		if(names[n]==w) { return n; }
 	}
 
 	n=fr; names[n]=w;
-	printf("  usefree  %d\n",n);
 	types[n]='A'; addrs[n]=malloc(lens[n]=1);
 	*(unsigned char*)addrs[n]=0xc3;
 	return n;
@@ -70,7 +64,6 @@ int main(int argc,char *argv[]) {
 			uint64_t sn=*(uint64_t*)(b+3);
 			int n=find(sn);
 			int l=*(uint16_t*)(b+1);
-			printf("pkt %d\n",n);
 
 			switch(b[0]){
 			case 'A':
@@ -87,7 +80,6 @@ int main(int argc,char *argv[]) {
 					uint64_t *d=(uint64_t*)(addrs[n]+5);
 					*(uint8_t*)addrs[n]=0xe8;
 					*(int32_t*)(addrs[n]+1)=((uint8_t*)llvm)-((uint8_t*)d);
-					printf("llvm:%p - d:%p = %08lx\n", llvm, d, ((uint8_t*)llvm)-((uint8_t*)d));
 					int i; for(i=0;i<l;i++) {
 						if((char)*p) { *d=*p; } else { *d=find(*p)<<8; }
 						d++; p++;

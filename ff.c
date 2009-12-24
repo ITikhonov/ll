@@ -40,7 +40,6 @@ restart:	switch(*v){
 				sp=1;
 				int pad=7-((p-(pkt+3))&7);
 				if(pad) { memset(p,0,pad); p+=pad; *p++=t; t=0; }; n++;
-				d(p);
 			}
 			break;
 		default:
@@ -57,7 +56,6 @@ restart:	switch(*v){
 				case '[':
 					*(uint16_t*)p=last; last=(p-(pkt+3))>>3;
 					p+=8; sp=1; n++;
-					printf("\n[[[ %d\n",last);
 					continue;
 				case ']':
 					{
@@ -65,7 +63,6 @@ restart:	switch(*v){
 						int q=last;
 						last=*(int16_t*)pp;
 						*pp=((n-q-1)<<8)|'@';
-						printf("\n]]] %d\n",last);
 						sp=1;
 					}
 					continue;
@@ -85,7 +82,7 @@ restart:	switch(*v){
 
 	printf("\n");
 	int i; for(i=0;i<p-pkt;i++) { d1(pkt+i); }
-	printf("\n");
+	printf("\n\n");
 
 	send(s,pkt,p-pkt,0);
 }
