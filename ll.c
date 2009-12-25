@@ -36,6 +36,11 @@ int find(uint64_t w) {
 	return n;
 }
 
+uint64_t kick(uint64_t f) {
+	printf("%lu\n",f);
+	return 11;
+}
+
 int main(int argc,char *argv[]) {
 	int s=socket(AF_INET, SOCK_DGRAM, 0);
 	struct sockaddr_in a={.sin_family=AF_INET,.sin_port=htons(1233),.sin_addr={htonl(0x7f000001)}};
@@ -46,15 +51,7 @@ int main(int argc,char *argv[]) {
 	memset(lens,0,sizeof(lens));
 	memset(types,0,sizeof(types));
 
-	{	find(*(uint64_t*)"\0main\0\0");
-		int n=find(*(uint64_t*)"\0;\0\0\0\0\0");
-		addrs[n]=realloc(addrs[n],5);
-		((uint8_t*)addrs[n])[0]=0x48;
-		((uint8_t*)addrs[n])[1]=0x83;
-		((uint8_t*)addrs[n])[2]=0xc4;
-		((uint8_t*)addrs[n])[3]=0x10;
-		((uint8_t*)addrs[n])[4]=0xc3;
-	}
+	find(*(uint64_t*)"\0main\0\0");
 
 	llsp--;
 

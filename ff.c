@@ -47,9 +47,10 @@ restart:	switch(*v){
 				sp=0;
 				switch(*v) {
  				case '$':
-					{ uint64_t num=0; for(v++;;v++){
+ 				case '^':
+					{ unsigned char t=*v; uint64_t num=0; for(v++;;v++){
 						int x=H(*v);
-						if(x<0||x>15) { sp=1; *(uint64_t*)p=(num<<8)|'$'; p+=8; n++; break; }
+						if(x<0||x>15) { sp=1; *(uint64_t*)p=(num<<8)|t; p+=8; n++; break; }
 						num<<=4; num|=x;
 					}}
 					goto restart;

@@ -10,6 +10,7 @@ h3. Current goals
 * -VM numbers.-
 * -VM quotes.-
 * -Send execute word.-
+* -kick instuction.-
 * VM save.
 * VM load.
 * Conditional.
@@ -45,6 +46,9 @@ Word <code>fact</code> is associated with pointer to memory area holding vm exec
 
 <pre><code>e8 aa aa aa aa [@2] [drop] [$1] [@5] [dup] [$1] [-] [fact] [*] [dup] [$1] [=] [if] [;]</code></pre>
 
+There is "kick" instruction in form of @^hexnumber@ it will execute @kick@ C function with number passed as argument,
+function returns value on top of stack.
+
 h3. Data words
 
 <pre><code>data 11 22 33 44</code></pre>
@@ -63,4 +67,8 @@ address from def table and execute call to it. On return advance to next forth w
 On amd64 address of current forth word on top of return stack, %rdx is used for address resulution and for indirect call.
 
 When assembler word is called return stack holds [ vm ret, forth word pointer ] so we need to pop both in ';' word.
+
+h3. Save VM
+
+To save vm state we need to store @names@, @lens@, @types@ values and dump addrs memory areas.
 

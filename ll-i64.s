@@ -22,14 +22,22 @@ llcall:
 	movq	%rsi,llsp
 	ret
 
+
+
 llvm:
 	movq	(%rsp),%rdx
 	movq	(%rdx),%rdx
 
+	cmpb	$0,%dl
+	je	.llvm.forth
 	cmpb	$'$',%dl
 	je	.llvm.num
 	cmpb	$'@',%dl
 	je	.llvm.q
+	cmpb	$'^',%dl
+	je	.llvm.kick
+
+.llvm.forth:
 
 	shrq	$8,%rdx
 	movq	addrs(,%rdx,8),%rdx
@@ -50,6 +58,16 @@ llvm:
 	shrq	$8,%rdx
 	shlq	$3,%rdx
 	addq	%rdx,(%rsp)
+	jmp	.llvm.end
+
+.llvm.kick:
+	leaq	-8(%rsi),%rsi
+	movq	%rax,(%rsi)
+	movq	%rsi,llsp
+	shrq	$8,%rdx
+	movq	%rdx,%rdi
+	call	kick
+	movq	llsp,%rsi
 	jmp	.llvm.end
 
 .llvm.end:
