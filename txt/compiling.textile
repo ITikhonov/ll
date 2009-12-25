@@ -17,29 +17,29 @@ h3. Current goals
 
 h3. Network packet
 
-Network packet for machine code and data consists of type byte, 8 word bytes, 16-bit data length and data bytes.
+Network packet for machine code and data consists of type byte, 16-bit data length, 8 word bytes and data bytes.
 
 <pre><code>./ss 'A'  '*'  48 0f af 06  48 8d 76 04  c3
-'A'  '*' 00 00 00 00 00 00 00     09 00  48 0f af 06  48 8d 76 04  c3</code></pre>
+'A'  09 00  00 '*' 00 00 00 00 00 00   48 0f af 06  48 8d 76 04  c3</code></pre>
 
 <pre><code>./ss 'D'  'data'  11 22 33 44
-'D'  'd' 'a' 't' 'a' 00 00 00 00  04 00  11 22 33 44</code></pre>
+'D'  04 00  00 'd' 'a' 't' 'a' 00 00 00  11 22 33 44</code></pre>
 
 
 Network packet for forth word consists of type byte, and 16-bit length of sequence and sequence of 8-byte names.
 <pre><code>./ff 'fact [ drop $1 ] [ dup $1 - fact * ] dup $1 = if ;'
-'F' 14 00 "fact" @2 "drop" $1 @5 "dup" $1... ";"</code></pre>
+'F'  14 00  "fact" @2 "drop" $1 @5 "dup" $1... ";"</code></pre>
 
 
 h3. Machine code words
 
-<pre><code>#* 48 0f af 06  48 8d 76 04  c3</code></pre>
+<pre><code>* 48 0f af 06  48 8d 76 04  c3</code></pre>
 
 Word @*@ associated with pointer to memory area holding raw bytes @48 0f@&hellip;
 
 h3. Forth words
 
-<pre><code>:fact [ drop 1 ] [ dup 1 - fact * ] dup 1 = if ;</code></pre>
+<pre><code>fact [ drop 1 ] [ dup 1 - fact * ] dup 1 = if ;</code></pre>
 
 Word <code>fact</code> is associated with pointer to memory area holding vm execution prefix and 32-bit indexes and values.
 
@@ -47,9 +47,9 @@ Word <code>fact</code> is associated with pointer to memory area holding vm exec
 
 h3. Data words
 
-<pre><code>@data 11 22 33 44</code></pre>
+<pre><code>data 11 22 33 44</code></pre>
 
-Word <code>d</code> is associated with pointer to memory area holding data execution prefix and raw bytes <code>11 22</code>&hellip;
+Word <code>data</code> is associated with pointer to memory area holding data execution prefix and raw bytes <code>11 22</code>&hellip;
 
 <pre><code>e8 bb bb bb bb 11 22 33 44</code></pre>
 
