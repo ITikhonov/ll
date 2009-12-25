@@ -9,7 +9,7 @@ h3. Current goals
 * -VM words.-
 * -VM numbers.-
 * -VM quotes.-
-* Send execute word.
+* -Send execute word.-
 * VM save.
 * VM load.
 * Conditional.
