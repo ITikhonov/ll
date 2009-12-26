@@ -13,6 +13,7 @@ h3. Current goals
 * -kick instuction.-
 * -VM save.-
 * -VM load.-
+* Plaintext vm save/load.
 * Conditional.
 
 

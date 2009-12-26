@@ -18,6 +18,42 @@ void *addrs[512];
 int lens[512];
 char types[512];
 
+void fdump(FILE *f, uint8_t *a, int l) {
+	while(l--) {
+		fprintf(f," %02x", *a++);
+	}
+}
+
+void savea() {
+	FILE *f=fopen("state.lla","w");
+	int i; for(i=0;i<512;i++) {
+		if(!addrs[i]) continue;
+		fprintf(f,"%c %.7s",types[i],((char *)(names+i))+1);
+		switch(types[i]) {
+		case 'F':
+			{
+				uint64_t *a=(uint64_t*)(((uint8_t*)addrs[i])+5);
+				int l=(lens[i]-5)/8;
+				while(l--) {
+					uint64_t v=(*a)>>8; uint8_t c=(*a++)&0xff;
+					if(c) { fprintf(f," %c%lx",c,v); }
+					else { fprintf(f," %.7s",((char*)(names+v))+1); }
+				}
+			}
+			break;
+		case 'D':
+			fdump(f,((char*)addrs[i])+5,lens[i]-5);
+			break;
+		case 'A':
+			fdump(f,addrs[i],lens[i]);
+		default:;
+		}
+		fprintf(f,"\n");
+	}
+	fclose(f);
+	
+}
+
 void save() {
 	FILE *f=fopen("state.ll","w");
 	fwrite(names,sizeof(names),1,f);
@@ -33,6 +69,7 @@ void save() {
 			fwrite(addrs[i],lens[i],1,f);
 		default:;
 		}
+
 	}
 
 	fclose(f);
@@ -132,7 +169,7 @@ int main(int argc,char *argv[]) {
 	memset(lens,0,sizeof(lens));
 	memset(types,0,sizeof(types));
 
-	if(argc>1) { load(); }
+	if(argc>1) { load(); savea(); }
 	else { find(*(uint64_t*)"\0main\0\0"); }
 
 	llsp--;
