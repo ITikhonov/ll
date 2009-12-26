@@ -18,6 +18,55 @@ void *addrs[512];
 int lens[512];
 char types[512];
 
+void save() {
+	FILE *f=fopen("state.ll","w");
+	fwrite(names,sizeof(names),1,f);
+	fwrite(lens,sizeof(lens),1,f);
+	fwrite(types,sizeof(types),1,f);
+	int i; for(i=0;i<512;i++) {
+		switch(types[i]) {
+		case 'F':
+		case 'D':
+			fwrite(((char*)addrs[i])+5,lens[i]-5,1,f);
+			break;
+		case 'A':
+			fwrite(addrs[i],lens[i],1,f);
+		default:;
+		}
+	}
+
+	fclose(f);
+}
+
+void makeitforth(uint8_t *a) {
+	*a=0xe8;
+	*(int32_t*)(a+1)=((uint8_t*)llvm)-(a+5);
+}
+
+void load() {
+	FILE *f=fopen("state.ll","r");
+	fread(names,sizeof(names),1,f);
+	fread(lens,sizeof(lens),1,f);
+	fread(types,sizeof(types),1,f);
+	
+	int i; for(i=0;i<512;i++) {
+		addrs[i]=realloc(addrs[i],lens[i]);
+		switch(types[i]) {
+		case 'F':
+			printf("patching %d\n",i);
+			makeitforth(addrs[i]);
+			fread(((char*)addrs[i])+5,lens[i]-5,1,f);
+			break;
+		case 'D':
+			fread(((char*)addrs[i])+5,lens[i]-5,1,f);
+			break;
+		case 'A':
+			fread(addrs[i],lens[i],1,f);
+		default:;
+		}
+	}
+}
+
 int find(uint64_t w) {
 	int fr=0,n;
 
@@ -37,8 +86,11 @@ int find(uint64_t w) {
 }
 
 uint64_t kick(uint64_t f) {
-	printf("%lu\n",f);
-	return 11;
+	printf("kick %ld\n",f);
+	switch(f){
+	case 0: save(); return 0;
+	case 1: load(); return 0;
+	}
 }
 
 int main(int argc,char *argv[]) {
@@ -51,7 +103,8 @@ int main(int argc,char *argv[]) {
 	memset(lens,0,sizeof(lens));
 	memset(types,0,sizeof(types));
 
-	find(*(uint64_t*)"\0main\0\0");
+	if(argc>1) { load(); }
+	else { find(*(uint64_t*)"\0main\0\0"); }
 
 	llsp--;
 
@@ -75,8 +128,7 @@ int main(int argc,char *argv[]) {
 				{
 					uint64_t *p=(uint64_t*)(b+11);
 					uint64_t *d=(uint64_t*)(addrs[n]+5);
-					*(uint8_t*)addrs[n]=0xe8;
-					*(int32_t*)(addrs[n]+1)=((uint8_t*)llvm)-((uint8_t*)d);
+					makeitforth(addrs[n]);
 					int i; for(i=0;i<l;i++) {
 						if((char)*p) { *d=*p; } else { *d=find(*p)<<8; }
 						d++; p++;
