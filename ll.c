@@ -50,10 +50,14 @@ void load() {
 	fread(types,sizeof(types),1,f);
 	
 	int i; for(i=0;i<512;i++) {
-		addrs[i]=realloc(addrs[i],lens[i]);
+		if(lens[i]==0) {
+			if(addrs[i]) free(addrs[i]);
+			addrs[i]=0;
+		} else {
+			addrs[i]=realloc(addrs[i],lens[i]);
+		}
 		switch(types[i]) {
 		case 'F':
-			printf("patching %d\n",i);
 			makeitforth(addrs[i]);
 			fread(((char*)addrs[i])+5,lens[i]-5,1,f);
 			break;
@@ -65,6 +69,30 @@ void load() {
 		default:;
 		}
 	}
+}
+
+void dump() {
+	int i;
+	for(i=0;i<512;i++) {
+		if(!addrs[i]) continue;
+		printf("%.7s[%c] ",((char *)(names+i))+1,types[i]);
+		switch(types[i]) {
+		case 'F': {
+			uint64_t *p=(uint64_t*)(addrs[i]+5);
+			uint64_t *e=(uint64_t*)(addrs[i]+lens[i]);
+			for(;p<e;p++) {
+				if((char)*p) {
+					printf("%c%lu ",(char)*p,*p>>8);
+				} else {
+					printf("%.7s[%d] ",(char*)(names+(*p>>8))+1,(int)*p>>8);
+				}
+			}
+		}
+		default:;
+		}
+		printf("\n");
+	}
+	printf("%ld\n",*llsp);
 }
 
 int find(uint64_t w) {
@@ -90,6 +118,7 @@ uint64_t kick(uint64_t f) {
 	switch(f){
 	case 0: save(); return 0;
 	case 1: load(); return 0;
+	case 2: dump(); return 0;
 	}
 }
 
@@ -135,30 +164,6 @@ int main(int argc,char *argv[]) {
 					}
 				}
 				break;
-			case 'L':
-				{
-					int i; for(i=0;i<512;i++) {
-						if(!addrs[i]) continue;
-						printf("%.7s[%c] ",((char *)(names+i))+1,types[i]);
-						switch(types[i]) {
-						case 'F': {
-							uint64_t *p=(uint64_t*)(addrs[i]+5);
-							uint64_t *e=(uint64_t*)(addrs[i]+lens[i]);
-							for(;p<e;p++) {
-								if((char)*p) {
-									printf("%c%lu ",(char)*p,*p>>8);
-								} else {
-									printf("%.7s[%d] ",(char*)(names+(*p>>8))+1,(int)*p>>8);
-								}
-							}
-							}
-						default:;
-						}
-						printf("\n");
-					}
-					printf("%ld\n",*llsp);
-					
-				}
 			case 'E':
 				llcall(addrs[n]);
 				break;
