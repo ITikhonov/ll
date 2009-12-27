@@ -1,4 +1,4 @@
-CFLAGS=-g
+CFLAGS=-g -Wall
 ASFLAGS=-g
 
 all: ll ss ff

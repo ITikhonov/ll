@@ -13,7 +13,7 @@ h3. Current goals
 * -kick instuction.-
 * -VM save.-
 * -VM load.-
-* Plaintext vm save/load.
+* -Plaintext vm save/load.-
 * Conditional.
 
 
@@ -71,7 +71,5 @@ When assembler word is called return stack holds [ vm ret, forth word pointer ] 
 
 h3. Save VM
 
-To save vm state we need to store @names@, @lens@, @types@ values and dump @addrs@ memory areas.
-
-For forth and data words we exclude first five bytes (interpreter call instructions). For machine code words everything is stored.
+VM is stored as plaintext. Loading is awful.
 

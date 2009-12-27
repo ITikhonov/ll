@@ -12,11 +12,29 @@ extern uint64_t *llsp;
 extern void llcall(void *p);
 extern void llvm();
 
+char *savename="state.ll";
+
 
 uint64_t names[512];
 void *addrs[512];
 int lens[512];
 char types[512];
+
+int find(uint64_t w) {
+	int fr=0,n;
+	for(n=0;n<512;n++) {
+		if(!addrs[n]) { fr=n; break; }
+		if(names[n]==w) { return n; }
+	}
+	for(;n<512;n++) {
+		if(names[n]==w) { return n; }
+	}
+	n=fr; names[n]=w;
+	types[n]='A'; addrs[n]=malloc(lens[n]=1);
+	*(unsigned char*)addrs[n]=0xc3;
+	return n;
+}
+
 
 void fdump(FILE *f, uint8_t *a, int l) {
 	while(l--) {
@@ -24,11 +42,90 @@ void fdump(FILE *f, uint8_t *a, int l) {
 	}
 }
 
-void savea() {
-	FILE *f=fopen("state.lla","w");
+void makeitforth(uint8_t *a) {
+	*a=0xe8;
+	*(int32_t*)(a+1)=((uint8_t*)llvm)-(a+5);
+}
+
+void load() {
+	FILE *f=fopen(savename,"r");
+	if(!f) return;
+	uint64_t nm=0,*w;
+	char state='N',bs=0,*pn=((char*)&nm);
+	int cw=-1;
+	for(;;) {
+		char buf[10240], *p=buf, *e;
+		int n=fread(p,1,sizeof(buf),f);
+		if(n==0) break;
+		e=p+n;
+restart:	switch(state) {
+		case ' ':
+			while(p<e) { if((*p)!=' ') { state=bs; bs=' '; goto restart; } p++; } break;
+		case 'N':
+			while(p<e) {
+				if(*p==' ') {
+					cw=find(nm<<8);
+					lens[cw]=5;
+					addrs[cw]=realloc(addrs[cw],lens[cw]);
+					types[cw]='F'; makeitforth(addrs[cw]);
+					bs='T'; state=' '; p++;
+					nm=0; pn=(char*)&nm; goto restart;
+				}
+				*pn++=*p++;
+			} break;
+		case 'D':
+			while(p<e) {
+				if(*p==' '||*p=='\n') {
+					lens[cw]+=8;
+					addrs[cw]=realloc(addrs[cw],lens[cw]);
+					w=(uint64_t*)(((char*)addrs[cw])+lens[cw]-8);
+					*w=(nm<<8)|bs;
+					bs=*p=='\n'?'N':'W'; state=' '; p++; 
+					nm=0; goto restart;
+				} else {
+					nm<<=4;
+					if(*p>='a') { nm|=*p-'a'+10; }
+					else { nm|=*p-'0'; }
+					p++;
+				}
+			} break;
+		case 'W':
+			while(p<e) {
+				switch(*p){
+				case '@':
+				case '$':
+					if(bs==' ') {
+						bs=*p++;
+						state='D';
+						goto restart;
+					}
+					bs='W';
+				case '\n':
+				case ' ':
+					lens[cw]+=8;
+					addrs[cw]=realloc(addrs[cw],lens[cw]);
+					w=(uint64_t*)(((char*)addrs[cw])+lens[cw]-8);
+					*w=find(nm<<8)<<8;
+					bs=*p=='\n'?'N':'W'; state=' '; p++; 
+					nm=0; pn=(char*)&nm; goto restart;
+				}
+				*pn++=*p++;
+			} break;
+		case 'T':
+			bs='W'; state=' ';
+			goto restart;
+		}
+		
+	}
+	fclose(f);
+	return;
+}
+
+void save() {
+	FILE *f=fopen(savename,"w");
 	int i; for(i=0;i<512;i++) {
 		if(!addrs[i]) continue;
-		fprintf(f,"%c %.7s",types[i],((char *)(names+i))+1);
+		fprintf(f,"%.7s %c",((char *)(names+i))+1,types[i]);
 		switch(types[i]) {
 		case 'F':
 			{
@@ -42,7 +139,7 @@ void savea() {
 			}
 			break;
 		case 'D':
-			fdump(f,((char*)addrs[i])+5,lens[i]-5);
+			fdump(f,((uint8_t*)addrs[i])+5,lens[i]-5);
 			break;
 		case 'A':
 			fdump(f,addrs[i],lens[i]);
@@ -54,61 +151,8 @@ void savea() {
 	
 }
 
-void save() {
-	FILE *f=fopen("state.ll","w");
-	fwrite(names,sizeof(names),1,f);
-	fwrite(lens,sizeof(lens),1,f);
-	fwrite(types,sizeof(types),1,f);
-	int i; for(i=0;i<512;i++) {
-		switch(types[i]) {
-		case 'F':
-		case 'D':
-			fwrite(((char*)addrs[i])+5,lens[i]-5,1,f);
-			break;
-		case 'A':
-			fwrite(addrs[i],lens[i],1,f);
-		default:;
-		}
-
-	}
-
-	fclose(f);
-}
-
-void makeitforth(uint8_t *a) {
-	*a=0xe8;
-	*(int32_t*)(a+1)=((uint8_t*)llvm)-(a+5);
-}
-
-void load() {
-	FILE *f=fopen("state.ll","r");
-	fread(names,sizeof(names),1,f);
-	fread(lens,sizeof(lens),1,f);
-	fread(types,sizeof(types),1,f);
-	
-	int i; for(i=0;i<512;i++) {
-		if(lens[i]==0) {
-			if(addrs[i]) free(addrs[i]);
-			addrs[i]=0;
-		} else {
-			addrs[i]=realloc(addrs[i],lens[i]);
-		}
-		switch(types[i]) {
-		case 'F':
-			makeitforth(addrs[i]);
-			fread(((char*)addrs[i])+5,lens[i]-5,1,f);
-			break;
-		case 'D':
-			fread(((char*)addrs[i])+5,lens[i]-5,1,f);
-			break;
-		case 'A':
-			fread(addrs[i],lens[i],1,f);
-		default:;
-		}
-	}
-}
-
 void dump() {
+	printf("\n=== dump ===\n");
 	int i;
 	for(i=0;i<512;i++) {
 		if(!addrs[i]) continue;
@@ -119,7 +163,7 @@ void dump() {
 			uint64_t *e=(uint64_t*)(addrs[i]+lens[i]);
 			for(;p<e;p++) {
 				if((char)*p) {
-					printf("%c%lu ",(char)*p,*p>>8);
+					printf("%c%lx ",(char)*p,*p>>8);
 				} else {
 					printf("%.7s[%d] ",(char*)(names+(*p>>8))+1,(int)*p>>8);
 				}
@@ -132,31 +176,14 @@ void dump() {
 	printf("%ld\n",*llsp);
 }
 
-int find(uint64_t w) {
-	int fr=0,n;
-
-	for(n=0;n<512;n++) {
-		if(!addrs[n]) { fr=n; break; }
-		if(names[n]==w) { return n; }
-	}
-
-	for(;n<512;n++) {
-		if(names[n]==w) { return n; }
-	}
-
-	n=fr; names[n]=w;
-	types[n]='A'; addrs[n]=malloc(lens[n]=1);
-	*(unsigned char*)addrs[n]=0xc3;
-	return n;
-}
 
 uint64_t kick(uint64_t f) {
-	printf("kick %ld\n",f);
 	switch(f){
 	case 0: save(); return 0;
 	case 1: load(); return 0;
 	case 2: dump(); return 0;
 	}
+	return 0;
 }
 
 int main(int argc,char *argv[]) {
@@ -169,8 +196,9 @@ int main(int argc,char *argv[]) {
 	memset(lens,0,sizeof(lens));
 	memset(types,0,sizeof(types));
 
-	if(argc>1) { load(); savea(); }
-	else { find(*(uint64_t*)"\0main\0\0"); }
+	find(*(uint64_t*)"\0main\0\0");
+	if(argc>1) { savename=argv[1]; }
+	load();
 
 	llsp--;
 
