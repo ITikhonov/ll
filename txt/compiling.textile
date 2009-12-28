@@ -14,6 +14,7 @@ h3. Current goals
 * -VM save.-
 * -VM load.-
 * -Plaintext vm save/load.-
+* Document plaintext load.
 * Conditional.
 
 
@@ -72,4 +73,36 @@ When assembler word is called return stack holds [ vm ret, forth word pointer ] 
 h3. Save VM
 
 VM is stored as plaintext. Loading is awful.
+
+
+h3. Load VM
+
+Characters from start till first whitespace are word name to define, then character after white space is type, then whitespace.
+
+If type is 'F' then it depends on first character after whitespace. In case of @\@@, @$@ or @^@ trailing characeters until
+whitespace compose hex number. Otherwise it is a name of word. Then whitespace and repeat.
+
+If type is 'A' then two characters after whitespace are hex digits which compose byte. Then whitespace, and repeat.
+
+If line feed character is seen in whitespace then it threated as whitespace but afterwards processing goes from start.
+
+So states are:
+
+Before type known:
+
+- character of name
+- whitespace (next is type)
+- type character
+
+For type 'F':
+
+- whitespace
+- first character of word
+- character of hex number
+- character of word
+
+For type 'A':
+
+- whitespace
+- character of byte
 

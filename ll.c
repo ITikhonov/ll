@@ -50,70 +50,72 @@ void makeitforth(uint8_t *a) {
 void load() {
 	FILE *f=fopen(savename,"r");
 	if(!f) return;
-	uint64_t nm=0,*w;
-	char state='N',bs=0,*pn=((char*)&nm);
+	uint64_t nm=0;
+	char state='N',bs=0,*pn=((char*)&nm)+1;
 	int cw=-1;
 	for(;;) {
 		char buf[10240], *p=buf, *e;
 		int n=fread(p,1,sizeof(buf),f);
 		if(n==0) break;
 		e=p+n;
-restart:	switch(state) {
-		case ' ':
-			while(p<e) { if((*p)!=' ') { state=bs; bs=' '; goto restart; } p++; } break;
-		case 'N':
-			while(p<e) {
-				if(*p==' ') {
-					cw=find(nm<<8);
+		while(p<e) {
+			switch(state) {
+			case ' ':
+				if(*p=='\n') { state='N'; nm=0; pn=((char*)&nm)+1; }
+				else if(*p!=' ') { state=bs; continue; }
+				break;
+			case 'N':
+				if(*p==' ') { cw=find(nm); state=' '; bs='T'; break; }
+				*pn++=*p; break;
+			case 'T':
+				switch(*p) {
+				case 'F':
 					lens[cw]=5;
 					addrs[cw]=realloc(addrs[cw],lens[cw]);
 					types[cw]='F'; makeitforth(addrs[cw]);
-					bs='T'; state=' '; p++;
-					nm=0; pn=(char*)&nm; goto restart;
+					state=' '; bs='V'; break;
+				case 'A':
+					lens[cw]=0;
+					if(addrs[cw]) addrs[cw]=realloc(addrs[cw],lens[cw]);
+					types[cw]='A';
+					nm=0; state=' '; bs='H'; break;
 				}
-				*pn++=*p++;
-			} break;
-		case 'D':
-			while(p<e) {
+				break;
+			case 'V':
+				nm=0; 
+				switch(*p) {
+				case '@': case '$': case '^': bs=*p; state='R'; break;
+				default: pn=((char*)&nm)+1; state='W'; continue;
+				}
+				break;
+			case 'W':
 				if(*p==' '||*p=='\n') {
 					lens[cw]+=8;
 					addrs[cw]=realloc(addrs[cw],lens[cw]);
-					w=(uint64_t*)(((char*)addrs[cw])+lens[cw]-8);
-					*w=(nm<<8)|bs;
-					bs=*p=='\n'?'N':'W'; state=' '; p++; 
-					nm=0; goto restart;
-				} else {
-					nm<<=4;
-					if(*p>='a') { nm|=*p-'a'+10; }
-					else { nm|=*p-'0'; }
-					p++;
+					*(uint64_t*)(((uint8_t*)addrs[cw])+lens[cw]-8)=find(nm)<<8;
+					state=' '; bs='V'; continue;
 				}
-			} break;
-		case 'W':
-			while(p<e) {
-				switch(*p){
-				case '@':
-				case '$':
-					if(bs==' ') {
-						bs=*p++;
-						state='D';
-						goto restart;
-					}
-					bs='W';
-				case '\n':
-				case ' ':
+				*pn++=*p;
+				break;
+			case 'R':
+				if(*p==' '||*p=='\n') {
 					lens[cw]+=8;
 					addrs[cw]=realloc(addrs[cw],lens[cw]);
-					w=(uint64_t*)(((char*)addrs[cw])+lens[cw]-8);
-					*w=find(nm<<8)<<8;
-					bs=*p=='\n'?'N':'W'; state=' '; p++; 
-					nm=0; pn=(char*)&nm; goto restart;
+					*(uint64_t*)(((uint8_t*)addrs[cw])+lens[cw]-8)=(nm<<8)|bs;
+					state=' '; bs='V'; continue;
 				}
-				*pn++=*p++;
-			} break;
-		case 'T':
-			bs='W'; state=' ';
-			goto restart;
+				nm<<=4; if(*p>='a') { nm|=*p-'a'+10; } else { nm|=*p-'0'; }
+				break;
+			case 'H':
+				if(*p==' '||*p=='\n') {
+					lens[cw]+=1;
+					addrs[cw]=realloc(addrs[cw],lens[cw]);
+					*(((uint8_t*)addrs[cw])+lens[cw]-1)=nm;
+					nm=0; state=' '; bs='H'; continue;
+				}
+				nm<<=4; if(*p>='a') { nm|=*p-'a'+10; } else { nm|=*p-'0'; }
+			}
+			p++;
 		}
 		
 	}
@@ -168,7 +170,8 @@ void dump() {
 					printf("%.7s[%d] ",(char*)(names+(*p>>8))+1,(int)*p>>8);
 				}
 			}
-		}
+		} break;
+		case 'A': fdump(stdout,addrs[i],lens[i]); break;
 		default:;
 		}
 		printf("\n");
@@ -198,7 +201,7 @@ int main(int argc,char *argv[]) {
 
 	find(*(uint64_t*)"\0main\0\0");
 	if(argc>1) { savename=argv[1]; }
-	load();
+	load(); dump();
 
 	llsp--;
 
