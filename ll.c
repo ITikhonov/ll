@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <dlfcn.h>
 
 extern uint64_t llstack[16];
 extern uint64_t *llsp;
@@ -179,12 +180,23 @@ void dump() {
 	printf("%ld\n",*llsp);
 }
 
+void *dl=0;
+uint64_t (*kick_so)(uint64_t f)=0;
+
+void soreload() {
+	if(dl) dlclose(dl);
+	dl=dlopen("./kick.so",RTLD_NOW);
+	kick_so=dlsym(dl,"kick");
+}
 
 uint64_t kick(uint64_t f) {
 	switch(f){
 	case 0: save(); return 0;
 	case 1: load(); return 0;
 	case 2: dump(); return 0;
+	case 3: soreload(); return 0;
+	default:
+		if(kick_so) return kick_so(f);
 	}
 	return 0;
 }
@@ -202,6 +214,7 @@ int main(int argc,char *argv[]) {
 	find(*(uint64_t*)"\0main\0\0");
 	if(argc>1) { savename=argv[1]; }
 	load(); dump();
+
 
 	llsp--;
 

@@ -38,8 +38,8 @@ restart:	switch(*v){
 		case '\0':
 			if(!sp) {
 				sp=1;
-				int pad=7-((p-(pkt+3))&7);
-				if(pad) { memset(p,0,pad); p+=pad; *p++=t; t=0; }; n++;
+				int pad=8-((p-(pkt+3))%8);
+				if(pad) { memset(p,0,pad); p+=pad-1; *p++=t; t=0; }; n++;
 			}
 			break;
 		default:

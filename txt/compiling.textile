@@ -14,7 +14,8 @@ h3. Current goals
 * -VM save.-
 * -VM load.-
 * -Plaintext vm save/load.-
-* Document plaintext load.
+* -Document plaintext load.-
+* -Dynamic kick from .so.-
 * Conditional.
 
 
