@@ -66,7 +66,7 @@ llvm:
 	movq	%rsi,llsp
 	shrq	$8,%rdx
 	movq	%rdx,%rdi
-	call	kick
+	call	llkick
 	movq	llsp,%rsi
 	jmp	.llvm.end
 

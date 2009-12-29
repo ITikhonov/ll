@@ -16,6 +16,7 @@ h3. Current goals
 * -Plaintext vm save/load.-
 * -Document plaintext load.-
 * -Dynamic kick from .so.-
+* Move udp to kick.so.
 * Editor.
 * JS interpreter.
 
@@ -113,14 +114,14 @@ h3. Editor
 Typing word name followed by return prints this word's definition.
 
 Typing word name followed by other words inserts them to a definition. By default words
-are inserted at the beginning. Word starting with @/@ changes place of insertion to
+are inserted at the beginning. Slashe at the end of word change place of insertion to
 after next such word. Multiple @/@ select Nth next word.
 
-Slash after word wipe it and more slashes wipe words after it. Inserting will be done after wiped words.
-Only slash sets insertion to the end of word.
+Dash after slashes wipe word selected and more slashes wipe words after that.
+Insertion will be done after wiped words. Lone slash sets insertion to the end of definition.
 
 - @foo bar baz@ - word @foo@ is @bar baz ...@ now.
-- @foo ///bar/// baz /bar baz@ - delete third @bar@ in @foo@, two words after it and put @baz@ on their
+- @foo bar///--- baz bar/ baz@ - delete third @bar@ in @foo@, two words after it and put @baz@ on their
 place; find next @bar@ and put @baz@ after it. 
 - @foo / bar baz@ - word @foo@ is @... bar baz@ now.
 

@@ -15,7 +15,6 @@ extern void llvm();
 
 char *savename="state.ll";
 
-
 uint64_t names[512];
 void *addrs[512];
 int lens[512];
@@ -73,7 +72,7 @@ void load() {
 				case 'F':
 					lens[cw]=5;
 					addrs[cw]=realloc(addrs[cw],lens[cw]);
-					types[cw]='F'; makeitforth(addrs[cw]);
+					types[cw]='F';
 					state=' '; bs='V'; break;
 				case 'A':
 					lens[cw]=0;
@@ -94,6 +93,7 @@ void load() {
 					lens[cw]+=8;
 					addrs[cw]=realloc(addrs[cw],lens[cw]);
 					*(uint64_t*)(((uint8_t*)addrs[cw])+lens[cw]-8)=find(nm)<<8;
+					makeitforth(addrs[cw]);
 					state=' '; bs='V'; continue;
 				}
 				*pn++=*p;
@@ -184,12 +184,24 @@ void *dl=0;
 uint64_t (*kick_so)(uint64_t f)=0;
 
 void soreload() {
-	if(dl) dlclose(dl);
+	printf("reload!\n");
+	if(dl) {
+		uint64_t (*down_so)()=dlsym(dl,"down");
+		printf("down=%p!\n",down_so);
+		if(down_so) { down_so(); }
+		dlclose(dl);
+	}
+
 	dl=dlopen("./kick.so",RTLD_NOW);
+	if(!dl) printf("no kick.so: %s\n", dlerror());
+	void (*init_so)()=dlsym(dl,"init");
+	if(init_so) init_so(&llsp,names,addrs,lens,types,llcall);
+	else printf("no init in so\n");
 	kick_so=dlsym(dl,"kick");
+	if(!kick_so) printf("no kick in so\n");
 }
 
-uint64_t kick(uint64_t f) {
+uint64_t llkick(uint64_t f) {
 	switch(f){
 	case 0: save(); return 0;
 	case 1: load(); return 0;
@@ -201,53 +213,7 @@ uint64_t kick(uint64_t f) {
 	return 0;
 }
 
-int s=-1;
-
-void udp() {
-	unsigned char b[1024];
-	if(recv(s,b,1024,0)>0) {
-		uint64_t sn=*(uint64_t*)(b+3);
-		int n=find(sn);
-		int l=*(uint16_t*)(b+1);
-
-		switch(b[0]){
-		case 'A':
-		case 'D':
-			types[n]=b[0];
-			addrs[n]=realloc(addrs[n],lens[n]=l);
-			memcpy(addrs[n],b+11,l);
-			break;
-		case 'F':
-			types[n]=b[0];
-			addrs[n]=realloc(addrs[n],lens[n]=l*8+5);
-			{
-				uint64_t *p=(uint64_t*)(b+11);
-				uint64_t *d=(uint64_t*)(addrs[n]+5);
-				makeitforth(addrs[n]);
-				int i; for(i=0;i<l;i++) {
-					if((char)*p) { *d=*p; } else { *d=find(*p)<<8; }
-					d++; p++;
-				}
-			}
-			break;
-		case 'E':
-			llcall(addrs[n]);
-			break;
-		default:;
-		}
-	}
-}
-
-void udpinit() {
-	s=socket(AF_INET, SOCK_DGRAM, 0);
-	struct sockaddr_in a={.sin_family=AF_INET,.sin_port=htons(1233),.sin_addr={htonl(0x7f000001)}};
-	bind(s,(struct sockaddr*)&a,sizeof(a));
-	fcntl(s, F_SETFL, O_NONBLOCK);
-}
-
 int main(int argc,char *argv[]) {
-	udpinit();
-
 	memset(names,0,sizeof(names));
 	memset(addrs,0,sizeof(addrs));
 	memset(lens,0,sizeof(lens));
@@ -256,11 +222,11 @@ int main(int argc,char *argv[]) {
 	find(*(uint64_t*)"\0main\0\0");
 	if(argc>1) { savename=argv[1]; }
 	load(); dump();
+	soreload();
 
 	llsp--;
 
 	for(;;) {
-		udp();
 		llcall(addrs[0]);
 	}
 }
