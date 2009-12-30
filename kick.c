@@ -1,5 +1,11 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <poll.h>
+#include <unistd.h>
+#include <termios.h>
+#include <sys/ioctl.h>
+#include <linux/kd.h>
+#include <linux/keyboard.h>
 
 extern llcall(void *p);
 extern uint64_t *llsp;
@@ -12,18 +18,59 @@ extern char types[512];
 void udpinit();
 void udp();
 
+struct termios oldkey, newkey;
+int oldkbmode;
+
 void init() {
 	udpinit();
+
+        tcgetattr(STDIN_FILENO,&oldkey);
+        newkey.c_cflag = B9600 | CRTSCTS | CS8 | CLOCAL | CREAD;
+        newkey.c_iflag = IGNPAR;
+        newkey.c_oflag = oldkey.c_oflag;
+        newkey.c_lflag = 0;
+        newkey.c_cc[VMIN]=1;
+        newkey.c_cc[VTIME]=0;
+        tcflush(STDIN_FILENO, TCIFLUSH);
+        tcsetattr(STDIN_FILENO,TCSANOW,&newkey);
+
+	//ioctl(0,KDGKBMODE,&oldkbmode);
+	//ioctl(0,KDSKBMODE,K_MEDIUMRAW);
+
+}
+
+int s=-1;
+int keyhook=-1;
+
+static void wait() {
+	struct pollfd fds[2] = {{.fd=0,.events=POLLIN},{.fd=s,.events=POLLIN}};
+	uint64_t c=0;
+	if(poll(fds,2,-1)>0) {
+		printf("fds[0].revents\n",fds[0].revents);
+		if(fds[0].revents&POLLIN) {
+			read(0,&c,8);
+			printf("key: %08lx\n",c);
+			if(keyhook>-1) {
+				*(--llsp)=c;
+				llcall(addrs[keyhook]);
+			}
+		}
+		if(fds[1].revents&POLLIN) udp();
+	}
 }
 
 uint64_t kick(uint64_t f) {
 	switch(f) {
-	case 0x100: udp(); break;
+	case 0x100:
+		wait(); break;
+	case 0x101:;
+		keyhook=*llsp++; break;
 	}
 	return 0;
 }
 
 void down() {
+	tcsetattr(STDIN_FILENO,TCSANOW,&oldkey);
 	printf("down!!!\n");
 }
 
@@ -35,7 +82,6 @@ void down() {
 #include <stdlib.h>
 
 
-int s=-1;
 
 void udp() {
 	unsigned char b[1024];

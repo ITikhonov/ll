@@ -183,14 +183,18 @@ void dump() {
 void *dl=0;
 uint64_t (*kick_so)(uint64_t f)=0;
 
-void soreload() {
-	printf("reload!\n");
+void sodown() {
 	if(dl) {
 		uint64_t (*down_so)()=dlsym(dl,"down");
 		printf("down=%p!\n",down_so);
 		if(down_so) { down_so(); }
 		dlclose(dl);
 	}
+}
+
+void soreload() {
+	printf("reload!\n");
+	sodown();
 
 	dl=dlopen("./kick.so",RTLD_NOW);
 	if(!dl) printf("no kick.so: %s\n", dlerror());
@@ -229,5 +233,6 @@ int main(int argc,char *argv[]) {
 	for(;;) {
 		llcall(addrs[0]);
 	}
+	sodown();
 }
 

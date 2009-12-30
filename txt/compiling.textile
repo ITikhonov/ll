@@ -16,7 +16,10 @@ h3. Current goals
 * -Plaintext vm save/load.-
 * -Document plaintext load.-
 * -Dynamic kick from .so.-
-* Move udp to kick.so.
+* -Move udp to kick.so.-
+* -No polling.-
+* Quoting words.
+* Keyboard input.
 * Editor.
 * JS interpreter.
 
