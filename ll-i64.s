@@ -36,6 +36,8 @@ llvm:
 	je	.llvm.q
 	cmpb	$'^',%dl
 	je	.llvm.kick
+	cmpb	$'\'',%dl
+	je	.llvm.num
 
 .llvm.forth:
 

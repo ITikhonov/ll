@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <poll.h>
 #include <unistd.h>
 #include <termios.h>
@@ -39,6 +40,11 @@ void init() {
 
 }
 
+void down() {
+	tcsetattr(STDIN_FILENO,TCSANOW,&oldkey);
+	printf("down!!!\n");
+}
+
 int s=-1;
 int keyhook=-1;
 
@@ -50,6 +56,7 @@ static void wait() {
 		if(fds[0].revents&POLLIN) {
 			read(0,&c,8);
 			printf("key: %08lx\n",c);
+			if(c==0x1b) {down(); exit(0);}
 			if(keyhook>-1) {
 				*(--llsp)=c;
 				llcall(addrs[keyhook]);
@@ -69,10 +76,6 @@ uint64_t kick(uint64_t f) {
 	return 0;
 }
 
-void down() {
-	tcsetattr(STDIN_FILENO,TCSANOW,&oldkey);
-	printf("down!!!\n");
-}
 
 #include <fcntl.h>
 #include <sys/socket.h>

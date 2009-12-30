@@ -48,15 +48,15 @@ void makeitforth(uint8_t *a) {
 }
 
 void load() {
-	FILE *f=fopen(savename,"r");
-	if(!f) return;
+	int f=open(savename,O_RDONLY);
+	if(f<0) return;
 	uint64_t nm=0;
 	char state='N',bs=0,*pn=((char*)&nm)+1;
 	int cw=-1;
 	for(;;) {
 		char buf[10240], *p=buf, *e;
-		int n=fread(p,1,sizeof(buf),f);
-		if(n==0) break;
+		int n=read(f,p,sizeof(buf));
+		if(n<=0) break;
 		e=p+n;
 		while(p<e) {
 			switch(state) {
@@ -83,16 +83,19 @@ void load() {
 				break;
 			case 'V':
 				nm=0; 
+				bs=*p;
 				switch(*p) {
-				case '@': case '$': case '^': bs=*p; state='R'; break;
-				default: pn=((char*)&nm)+1; state='W'; continue;
+				case '@': case '$': case '^': state='R'; break;
+				case '\'': pn=((char*)&nm)+1; state='W'; break;
+				default: pn=((char*)&nm)+1; state='W'; bs=0; continue;
 				}
 				break;
 			case 'W':
 				if(*p==' '||*p=='\n') {
 					lens[cw]+=8;
 					addrs[cw]=realloc(addrs[cw],lens[cw]);
-					*(uint64_t*)(((uint8_t*)addrs[cw])+lens[cw]-8)=find(nm)<<8;
+					printf("word: %c %.7s\n",bs,1+(char*)&nm);
+					*(uint64_t*)(((uint8_t*)addrs[cw])+lens[cw]-8)=(find(nm)<<8)|bs;
 					makeitforth(addrs[cw]);
 					state=' '; bs='V'; continue;
 				}
@@ -120,7 +123,7 @@ void load() {
 		}
 		
 	}
-	fclose(f);
+	close(f);
 	return;
 }
 
@@ -159,16 +162,18 @@ void dump() {
 	int i;
 	for(i=0;i<512;i++) {
 		if(!addrs[i]) continue;
-		printf("%.7s[%c] ",((char *)(names+i))+1,types[i]);
+		printf("%d: %.7s[%c] ",i,((char *)(names+i))+1,types[i]);
 		switch(types[i]) {
 		case 'F': {
 			uint64_t *p=(uint64_t*)(addrs[i]+5);
 			uint64_t *e=(uint64_t*)(addrs[i]+lens[i]);
 			for(;p<e;p++) {
-				if((char)*p) {
+				switch((char)*p) {
+				case 0:
+				case '\'':
+					printf("%.1s%.7s[%d] ",*p?"'":"",(char*)(names+(*p>>8))+1,(int)*p>>8); break;
+				default:
 					printf("%c%lx ",(char)*p,*p>>8);
-				} else {
-					printf("%.7s[%d] ",(char*)(names+(*p>>8))+1,(int)*p>>8);
 				}
 			}
 		} break;
