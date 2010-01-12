@@ -15,6 +15,7 @@ extern uint64_t names[512];
 extern void *addrs[512];
 extern int lens[512];
 extern char types[512];
+extern void save();
 
 void udpinit();
 void udp();
@@ -52,11 +53,12 @@ static void wait() {
 	struct pollfd fds[2] = {{.fd=0,.events=POLLIN},{.fd=s,.events=POLLIN}};
 	uint64_t c=0;
 	if(poll(fds,2,-1)>0) {
-		printf("fds[0].revents\n",fds[0].revents);
+		//printf("fds[0].revents\n",fds[0].revents);
 		if(fds[0].revents&POLLIN) {
 			read(0,&c,8);
-			printf("key: %08lx\n",c);
+			// printf("key: %08lx\n",c);
 			if(c==0x1b) {down(); exit(0);}
+			if(c=='s') {save();}
 			if(keyhook>-1) {
 				*(--llsp)=c;
 				llcall(addrs[keyhook]);
@@ -70,8 +72,10 @@ uint64_t kick(uint64_t f) {
 	switch(f) {
 	case 0x100:
 		wait(); break;
-	case 0x101:;
+	case 0x101:
 		keyhook=*llsp++; break;
+	case 0x102:
+		printf("%lx ", *llsp++); fflush(stdout); break;
 	}
 	return 0;
 }

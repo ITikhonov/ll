@@ -18,8 +18,9 @@ h3. Current goals
 * -Dynamic kick from .so.-
 * -Move udp to kick.so.-
 * -No polling.-
-* Quoting words.
-* Keyboard input.
+* Buy a shovel.
+* -Quoting words.-
+* -Keyboard input.-
 * Editor.
 * JS interpreter.
 

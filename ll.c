@@ -139,8 +139,8 @@ void save() {
 				int l=(lens[i]-5)/8;
 				while(l--) {
 					uint64_t v=(*a)>>8; uint8_t c=(*a++)&0xff;
-					if(c) { fprintf(f," %c%lx",c,v); }
-					else { fprintf(f," %.7s",((char*)(names+v))+1); }
+					if(c&&c!='\'') { fprintf(f," %c%lx",c,v); }
+					else { fprintf(f," %.1s%.7s",(c?((char*)&c):""),((char*)(names+v))+1); }
 				}
 			}
 			break;
@@ -171,7 +171,7 @@ void dump() {
 				switch((char)*p) {
 				case 0:
 				case '\'':
-					printf("%.1s%.7s[%d] ",*p?"'":"",(char*)(names+(*p>>8))+1,(int)*p>>8); break;
+					printf("%.1s%.7s[%d] ",(char)*p?"'":"",(char*)(names+(*p>>8))+1,(int)*p>>8); break;
 				default:
 					printf("%c%lx ",(char)*p,*p>>8);
 				}
@@ -228,6 +228,7 @@ int main(int argc,char *argv[]) {
 	memset(lens,0,sizeof(lens));
 	memset(types,0,sizeof(types));
 
+	find(*(uint64_t*)"\0init\0\0");
 	find(*(uint64_t*)"\0main\0\0");
 	if(argc>1) { savename=argv[1]; }
 	load(); dump();
@@ -235,8 +236,9 @@ int main(int argc,char *argv[]) {
 
 	llsp--;
 
+	llcall(addrs[0]);
 	for(;;) {
-		llcall(addrs[0]);
+		llcall(addrs[1]);
 	}
 	sodown();
 }
