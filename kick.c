@@ -17,15 +17,10 @@ extern int lens[512];
 extern char types[512];
 extern void save();
 
-void udpinit();
-void udp();
-
 struct termios oldkey, newkey;
 int oldkbmode;
 
 void init() {
-	udpinit();
-
         tcgetattr(STDIN_FILENO,&oldkey);
         newkey.c_cflag = B9600 | CRTSCTS | CS8 | CLOCAL | CREAD;
         newkey.c_iflag = IGNPAR;
@@ -46,14 +41,12 @@ void down() {
 	printf("down!!!\n");
 }
 
-int s=-1;
 int keyhook=-1;
 
 static void wait() {
-	struct pollfd fds[2] = {{.fd=0,.events=POLLIN},{.fd=s,.events=POLLIN}};
+	struct pollfd fds[2] = {{.fd=0,.events=POLLIN}};
 	uint64_t c=0;
-	if(poll(fds,2,-1)>0) {
-		//printf("fds[0].revents\n",fds[0].revents);
+	if(poll(fds,1,-1)>0) {
 		if(fds[0].revents&POLLIN) {
 			read(0,&c,8);
 			// printf("key: %08lx\n",c);
@@ -64,7 +57,6 @@ static void wait() {
 				llcall(addrs[keyhook]);
 			}
 		}
-		if(fds[1].revents&POLLIN) udp();
 	}
 }
 
@@ -78,57 +70,5 @@ uint64_t kick(uint64_t f) {
 		printf("%lx ", *llsp++); fflush(stdout); break;
 	}
 	return 0;
-}
-
-
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
-
-
-
-void udp() {
-	unsigned char b[1024];
-	if(recv(s,b,1024,0)>0) {
-		uint64_t sn=*(uint64_t*)(b+3);
-		int n=find(sn);
-		int l=*(uint16_t*)(b+1);
-
-		switch(b[0]){
-		case 'A':
-		case 'D':
-			types[n]=b[0];
-			addrs[n]=realloc(addrs[n],lens[n]=l);
-			memcpy(addrs[n],b+11,l);
-			break;
-		case 'F':
-			types[n]=b[0];
-			addrs[n]=realloc(addrs[n],lens[n]=l*8+5);
-			{
-				uint64_t *p=(uint64_t*)(b+11);
-				uint64_t *d=(uint64_t*)(addrs[n]+5);
-				makeitforth(addrs[n]);
-				int i; for(i=0;i<l;i++) {
-					if((char)*p) { *d=*p; } else { *d=find(*p)<<8; }
-					d++; p++;
-				}
-			}
-			break;
-		case 'E':
-			llcall(addrs[n]);
-			break;
-		default:;
-		}
-	}
-}
-
-void udpinit() {
-	s=socket(AF_INET, SOCK_DGRAM, 0);
-	struct sockaddr_in a={.sin_family=AF_INET,.sin_port=htons(1233),.sin_addr={htonl(0x7f000001)}};
-	bind(s,(struct sockaddr*)&a,sizeof(a));
-	fcntl(s, F_SETFL, O_NONBLOCK);
 }
 

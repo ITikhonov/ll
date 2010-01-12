@@ -18,9 +18,9 @@ h3. Current goals
 * -Dynamic kick from .so.-
 * -Move udp to kick.so.-
 * -No polling.-
-* Buy a shovel.
 * -Quoting words.-
 * -Keyboard input.-
+* Buy a shovel.
 * Editor.
 * JS interpreter.
 
@@ -114,6 +114,8 @@ For type 'A':
 - character of byte
 
 h3. Editor
+
+Hitting a key puts it in the word buffer. Hitting space applies word.
 
 Typing word name followed by return prints this word's definition.
 
