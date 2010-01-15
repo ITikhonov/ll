@@ -49,7 +49,6 @@ static void wait() {
 	if(poll(fds,1,-1)>0) {
 		if(fds[0].revents&POLLIN) {
 			read(0,&c,8);
-			// printf("key: %08lx\n",c);
 			if(c==0x1b) {down(); exit(0);}
 			if(c=='s') {save();}
 			if(keyhook>-1) {
@@ -62,12 +61,9 @@ static void wait() {
 
 uint64_t kick(uint64_t f) {
 	switch(f) {
-	case 0x100:
-		wait(); break;
-	case 0x101:
-		keyhook=*llsp++; break;
-	case 0x102:
-		printf("%lx ", *llsp++); fflush(stdout); break;
+	case 0x100: wait(); break;
+	case 0x101: keyhook=*llsp++; break;
+	case 0x102: printf("%lx ", *llsp++); fflush(stdout); break;
 	}
 	return 0;
 }
