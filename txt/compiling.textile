@@ -21,6 +21,7 @@ h3. Current goals
 * -Quoting words.-
 * -Keyboard input.-
 * Buy a shovel.
+* Fix stub for `word' to push correct address
 * Editor.
 * JS interpreter.
 
