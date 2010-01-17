@@ -2,7 +2,7 @@ CFLAGS=-g -Wall
 LDFLAGS=-ldl -Wl,--export-dynamic
 ASFLAGS=-g
 
-all: ll ss ff kick.so
+all: ll kick.so
 
 ll: ll.o ll-i64.o
 
