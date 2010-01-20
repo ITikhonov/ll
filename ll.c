@@ -20,6 +20,8 @@ void *addrs[512];
 int lens[512];
 char types[512];
 
+uint64_t llkick(uint64_t f);
+
 int find(uint64_t w) {
 	int fr=0,n;
 	for(n=0;n<512;n++) {
@@ -40,11 +42,6 @@ void fdump(FILE *f, uint8_t *a, int l) {
 	while(l--) {
 		fprintf(f," %02x", *a++);
 	}
-}
-
-void makeitforth(uint8_t *a) {
-	*a=0xe8;
-	*(int32_t*)(a+1)=((uint8_t*)llvm)-(a+5);
 }
 
 void load() {
@@ -70,14 +67,15 @@ void load() {
 			case 'T':
 				switch(*p) {
 				case 'F':
-					lens[cw]=5;
+					lens[cw]=0;
 					addrs[cw]=realloc(addrs[cw],lens[cw]);
 					types[cw]='F';
 					state=' '; bs='V'; break;
 				case 'A':
+				case 'I':
 					lens[cw]=0;
 					if(addrs[cw]) addrs[cw]=realloc(addrs[cw],lens[cw]);
-					types[cw]='A';
+					types[cw]=*p;
 					nm=0; state=' '; bs='H'; break;
 				}
 				break;
@@ -96,7 +94,6 @@ void load() {
 					addrs[cw]=realloc(addrs[cw],lens[cw]);
 					printf("word: %c %.7s\n",bs,1+(char*)&nm);
 					*(uint64_t*)(((uint8_t*)addrs[cw])+lens[cw]-8)=(find(nm)<<8)|bs;
-					makeitforth(addrs[cw]);
 					state=' '; bs='V'; continue;
 				}
 				*pn++=*p;
@@ -146,8 +143,8 @@ void save() {
 		switch(types[i]) {
 		case 'F':
 			{
-				uint64_t *a=(uint64_t*)(((uint8_t*)addrs[i])+5);
-				int l=(lens[i]-5)/8;
+				uint64_t *a=(uint64_t*)((uint8_t*)addrs[i]);
+				int l=lens[i]/8;
 				while(l--) {
 					uint64_t v=(*a)>>8; uint8_t c=(*a++)&0xff;
 					if(c&&c!='\'') { fprintf(f," %c%lx",c,v); }
@@ -159,6 +156,7 @@ void save() {
 			fdump(f,((uint8_t*)addrs[i])+5,lens[i]-5);
 			break;
 		case 'A':
+		case 'I':
 			fdump(f,addrs[i],lens[i]);
 		default:;
 		}
@@ -166,6 +164,71 @@ void save() {
 	}
 	fclose(f);
 	
+}
+
+uint8_t comp[65535];
+uint8_t *caddrs[512];
+
+void compile() {
+	static uint8_t dup[7]={0x48, 0x8d, 0x76, 0xf8, 0x48, 0x89, 0x06};
+	uint8_t *p=comp;
+	int i; for(i=0;i<512;i++) {
+		if(!addrs[i]) continue;
+		printf("%s",(char*)(names+i)+1); 
+		switch(types[i]) {
+		case 'A':
+			caddrs[i]=p; memcpy(p,addrs[i],lens[i]); p+=lens[i];
+			fdump(stdout,caddrs[i],lens[i]);
+			break;
+		case 'F':
+			caddrs[i]=p;
+			{
+				uint64_t *a=(uint64_t*)((uint8_t*)addrs[i]);
+				int l=lens[i]/8;
+				while(l--) {
+					uint8_t *st=p;
+					uint64_t v=(*a)>>8; uint8_t c=(*a++)&0xff;
+					if(c&&c!='\'') { fprintf(stdout," %c%lx",c,v); }
+					else { fprintf(stdout," %.1s%.7s",(c?((char*)&c):""),((char*)(names+v))+1); }
+					switch(c) {
+					case 0:
+						if(types[v]=='I') { 
+							memcpy(p,addrs[v],lens[v]); p+=lens[v];
+						} else {
+							*p++=0xff; *p++=0x14; *p++=0x25;
+							*(uint32_t*)p=(uint32_t)(uint64_t)(caddrs+v); p+=4;
+						}
+						break;
+					case '$':
+					case '\'':
+						memcpy(p,dup,7); p+=7;
+						*p++=0x48; *p++=0xb8;
+						*(uint64_t*)p=v; p+=8;
+						break;
+					case '^':
+						memcpy(p,dup,7); p+=7;
+						// mov    %rsi,llsp
+						*p++=0x48; *p++=0x89; *p++=0x34; *p++=0x25;
+						*(uint32_t*)p=(uint32_t)(uint64_t)(&llsp); p+=4;
+						// movq $x,%rdi
+						*p++=0x48; *p++=0xc7; *p++=0xc7;
+						*(uint32_t*)p=(uint32_t)v; p+=4;
+						// call llkick
+						*p++=0xe8;
+						*(uint32_t*)p=(uint32_t)(uint64_t)((uint8_t*)llkick-(p+4)); p+=4;
+						// movq $llsp,%rsi
+						*p++=0x48; *p++=0x8b; *p++=0x34; *p++=0x25;
+						*(uint32_t*)p=(uint32_t)(uint64_t)(&llsp); p+=4;
+						break;
+					}
+					fdump(stdout,st,p-st);
+					printf("\n");
+				}
+			}
+		case 'D': break;
+		}
+		printf("\n");
+	}
 }
 
 void dump() {
@@ -176,7 +239,7 @@ void dump() {
 		printf("%d: %.7s[%c] ",i,((char *)(names+i))+1,types[i]);
 		switch(types[i]) {
 		case 'F': {
-			uint64_t *p=(uint64_t*)(addrs[i]+5);
+			uint64_t *p=(uint64_t*)(addrs[i]);
 			uint64_t *e=(uint64_t*)(addrs[i]+lens[i]);
 			for(;p<e;p++) {
 				switch((char)*p) {
@@ -188,6 +251,7 @@ void dump() {
 				}
 			}
 		} break;
+		case 'I':
 		case 'A': fdump(stdout,addrs[i],lens[i]); break;
 		default:;
 		}
@@ -244,12 +308,13 @@ int main(int argc,char *argv[]) {
 	if(argc>1) { savename=argv[1]; }
 	load(); dump();
 	soreload();
+	compile();
 
 	llsp--;
 
-	llcall(addrs[0]);
+	llcall(caddrs[0]);
 	for(;;) {
-		llcall(addrs[1]);
+		llcall(caddrs[1]);
 	}
 	sodown();
 }

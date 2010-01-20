@@ -1,4 +1,4 @@
-; A 48 83 c4 10 c3
+; I c3
 call A 48 89 44 24 08 48 ad c3
 dot F ^102 drop ;
 drop A 48 ad c3
@@ -6,7 +6,7 @@ dump F ^2 drop ;
 dup A 48 8d 76 f8 48 89 06 c3
 fetch A 48 8b 00 c3
 init F 'key ^101 drop $0 word store ;
-key F word fetch or $8 ror dup dot word store @3 $1 dot ; call ;
+key F word fetch or $8 ror dup dot word store ;
 load F ^1 drop ;
 main F ^100 drop ;
 or A 48 0b 06 48 8d 76 04 c3

@@ -13,6 +13,7 @@ extern uint64_t *llsp;
 
 extern uint64_t names[512];
 extern void *addrs[512];
+extern void *caddrs[512];
 extern int lens[512];
 extern char types[512];
 extern void save();
@@ -53,7 +54,7 @@ static void wait() {
 			if(c=='s') {save();}
 			if(keyhook>-1) {
 				*(--llsp)=c;
-				llcall(addrs[keyhook]);
+				llcall(caddrs[keyhook]);
 			}
 		}
 	}

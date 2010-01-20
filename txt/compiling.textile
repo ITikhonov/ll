@@ -21,9 +21,9 @@ h3. Current goals
 * -Quoting words.-
 * -Keyboard input.-
 * -Alphasorted image.-
+* -Fix stub for `word' to push correct address.-
 * Buy a shovel.
-* Fix stub for `word' to push correct address.
-* Compiler.
+* -Compiler.-
 * Conditional.
 * Editor.
 * JS interpreter.
