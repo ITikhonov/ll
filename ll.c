@@ -127,9 +127,20 @@ void load() {
 	return;
 }
 
+
+int namecmp(const void *a, const void *b) {
+	return memcmp(((char *)(names+*(int*)a))+1,((char *)(names+*(int *)b))+1,7);
+}
+
 void save() {
 	FILE *f=fopen(savename,"w");
-	int i; for(i=0;i<512;i++) {
+	int idx[512];
+	
+	int j; for(j=0;j<512;j++) { idx[j]=j; }
+	qsort(idx,512,sizeof(*idx),namecmp);
+
+	for(j=0;j<512;j++) {
+		int i=idx[j]; 
 		if(!addrs[i]) continue;
 		fprintf(f,"%.7s %c",((char *)(names+i))+1,types[i]);
 		switch(types[i]) {
