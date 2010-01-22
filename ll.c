@@ -83,7 +83,7 @@ void load() {
 				nm=0; 
 				bs=*p;
 				switch(*p) {
-				case '@': case '$': case '^': state='R'; break;
+				case '?': case '$': case '^': state='R'; break;
 				case '\'': pn=((char*)&nm)+1; state='W'; break;
 				default: pn=((char*)&nm)+1; state='W'; bs=0; continue;
 				}
@@ -174,6 +174,7 @@ void compile() {
 	uint8_t *p=comp;
 	int i; for(i=0;i<512;i++) {
 		if(!addrs[i]) continue;
+		uint8_t *backp=0, backn=-1;
 		printf("%s",(char*)(names+i)+1); 
 		switch(types[i]) {
 		case 'A':
@@ -220,6 +221,13 @@ void compile() {
 						*p++=0x48; *p++=0x8b; *p++=0x34; *p++=0x25;
 						*(uint32_t*)p=(uint32_t)(uint64_t)(&llsp); p+=4;
 						break;
+					case '?':
+						*p++=0x74; backp=p; *p++=0x00; backn=v;
+					}
+
+					printf("backn %u\n",backn);
+					if(backn>=0 && !backn--) {
+						*backp=p-(backp+1);
 					}
 					fdump(stdout,st,p-st);
 					printf("\n");
@@ -227,6 +235,7 @@ void compile() {
 			}
 		case 'D': break;
 		}
+		if(caddrs[i]) fdump(stdout,caddrs[i],p-caddrs[i]);
 		printf("\n");
 	}
 }

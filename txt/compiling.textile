@@ -24,7 +24,7 @@ h3. Current goals
 * -Fix stub for `word' to push correct address.-
 * Buy a shovel.
 * -Compiler.-
-* Conditional.
+* -Conditional.-
 * Editor.
 * JS interpreter.
 

@@ -21,6 +21,16 @@ extern void save();
 struct termios oldkey, newkey;
 int oldkbmode;
 
+extern uint64_t llstack[16];
+
+static void stack() {
+	int n=(&llstack[16])-llsp;
+	uint64_t *p=llsp;
+	printf("\nstack[%u]:",n);
+	while(n--) { printf(" %lx", *p++); }
+	printf("\n");
+}
+
 void init() {
         tcgetattr(STDIN_FILENO,&oldkey);
         newkey.c_cflag = B9600 | CRTSCTS | CS8 | CLOCAL | CREAD;
@@ -35,6 +45,7 @@ void init() {
 	//ioctl(0,KDGKBMODE,&oldkbmode);
 	//ioctl(0,KDSKBMODE,K_MEDIUMRAW);
 
+	stack();
 }
 
 void down() {
@@ -44,6 +55,7 @@ void down() {
 
 int keyhook=-1;
 
+
 static void wait() {
 	struct pollfd fds[2] = {{.fd=0,.events=POLLIN}};
 	uint64_t c=0;
@@ -51,7 +63,6 @@ static void wait() {
 		if(fds[0].revents&POLLIN) {
 			read(0,&c,8);
 			if(c==0x1b) {down(); exit(0);}
-			if(c=='s') {save();}
 			if(keyhook>-1) {
 				*(--llsp)=c;
 				llcall(caddrs[keyhook]);
@@ -65,6 +76,7 @@ uint64_t kick(uint64_t f) {
 	case 0x100: wait(); break;
 	case 0x101: keyhook=*llsp++; break;
 	case 0x102: printf("%lx ", *llsp++); fflush(stdout); break;
+	case 0x103: stack(); break;
 	}
 	return 0;
 }

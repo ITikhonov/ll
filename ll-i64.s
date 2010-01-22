@@ -9,7 +9,7 @@ llstack:
 	.quad	0,0,0,0,0,0,0,329
 
 llsp:
-	.quad	.
+	.quad	llsp
 
 .text
 llcall:
