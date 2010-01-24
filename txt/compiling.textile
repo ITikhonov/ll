@@ -119,24 +119,20 @@ For type 'A':
 
 h3. Editor
 
-Hitting a key puts it in the word buffer. Hitting space applies word.
+Hitting a key puts it in the word buffer. Hitting space applies word and
+prints its definition.
 
-Typing word name followed by return prints this word's definition.
+Typing word name followed by return executes the word.
 
 Typing word name followed by other words inserts them to a definition. By default words
 are inserted at the beginning. Slashe at the end of word change place of insertion to
 after next such word. Multiple @/@ select Nth next word.
 
-Dash after slashes wipe word selected and more slashes wipe words after that.
+Dash after slashes wipe word selected and more dashes wipe words after that.
 Insertion will be done after wiped words. Lone slash sets insertion to the end of definition.
 
 - @foo bar baz@ - word @foo@ is @bar baz ...@ now.
-- @foo bar///--- baz bar/ baz@ - delete third @bar@ in @foo@, two words after it and put @baz@ on their
+- @foo bar///---baz bar/baz@ - delete third @bar@ in @foo@, two words after it and put @baz@ on their
 place; find next @bar@ and put @baz@ after it. 
-- @foo / bar baz@ - word @foo@ is @... bar baz@ now.
-
-Changes are not commited to running code until lone @!@ followed by return is entered.
-
-Lone @?@ shows current changed words.
-
+- @foo/bar baz@ - word @foo@ is @... bar baz@ now.
 
