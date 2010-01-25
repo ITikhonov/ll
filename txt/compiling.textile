@@ -28,6 +28,10 @@ h3. Current goals
 * -Data words.-
 * Runtime-only data words.
 * Editor.
+** Basic linear editor.
+*** -@names@, @addrs@ and etc from forth.-
+*** Runtime-only words.
+*** @find@ on space
 * JS interpreter.
 
 

@@ -77,7 +77,10 @@ uint64_t kick(uint64_t f) {
 	case 0x101: keyhook=*llsp++; break;
 	case 0x102: printf("%lx ", *llsp++); fflush(stdout); break;
 	case 0x103: stack(); break;
+	case 0x200: return (uint64_t)names;
+	case 0x201: return (uint64_t)addrs;
+	case 0x202: return (uint64_t)lens;
+	case 0x203: return (uint64_t)types;
 	}
 	return 0;
 }
-
