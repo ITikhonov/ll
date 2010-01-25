@@ -22,9 +22,11 @@ h3. Current goals
 * -Keyboard input.-
 * -Alphasorted image.-
 * -Fix stub for `word' to push correct address.-
-* Buy a shovel.
 * -Compiler.-
 * -Conditional.-
+* Buy a shovel.
+* -Data words.-
+* Runtime-only data words.
 * Editor.
 * JS interpreter.
 

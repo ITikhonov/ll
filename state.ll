@@ -15,6 +15,6 @@ reload F ^3 drop ;
 ror I 88 c1 48 ad 48 d3 c8
 save F ^0 drop ;
 store I 48 8b 0e 48 89 08 48 ad 48 ad
-word A 48 8d 76 f8 48 89 06 48 8d 05 01 00 00 00 c3 00 00 00 00 00 00 00 00
+word D 00 00 00 00 00 00 00 00
 cmp I 48 3b 06
 test F $1 dot ?2 $2 dot ;

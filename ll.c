@@ -73,6 +73,7 @@ void load() {
 					state=' '; bs='V'; break;
 				case 'A':
 				case 'I':
+				case 'D':
 					lens[cw]=0;
 					if(addrs[cw]) addrs[cw]=realloc(addrs[cw],lens[cw]);
 					types[cw]=*p;
@@ -174,7 +175,7 @@ void compile() {
 	uint8_t *p=comp;
 	int i; for(i=0;i<512;i++) {
 		if(!addrs[i]) continue;
-		uint8_t *backp=0, backn=-1;
+		uint8_t *backp=0; int backn=-1;
 		printf("%s",(char*)(names+i)+1); 
 		switch(types[i]) {
 		case 'A':
@@ -195,6 +196,12 @@ void compile() {
 					case 0:
 						if(types[v]=='I') { 
 							memcpy(p,addrs[v],lens[v]); p+=lens[v];
+						} else if(types[v]=='D') { 
+							printf("\ndata word!\n");
+							v=(uint64_t)(addrs[v]);
+							memcpy(p,dup,7); p+=7;
+							*p++=0x48; *p++=0xb8;
+							*(uint64_t*)p=v; p+=8;
 						} else {
 							*p++=0xff; *p++=0x14; *p++=0x25;
 							*(uint32_t*)p=(uint32_t)(uint64_t)(caddrs+v); p+=4;
@@ -225,7 +232,7 @@ void compile() {
 						*p++=0x74; backp=p; *p++=0x00; backn=v;
 					}
 
-					printf("backn %u\n",backn);
+					//printf("backn %d\n",backn);
 					if(backn>=0 && !backn--) {
 						*backp=p-(backp+1);
 					}
@@ -233,7 +240,7 @@ void compile() {
 					printf("\n");
 				}
 			}
-		case 'D': break;
+			case 'D': break;
 		}
 		if(caddrs[i]) fdump(stdout,caddrs[i],p-caddrs[i]);
 		printf("\n");
