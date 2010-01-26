@@ -27,6 +27,8 @@ h3. Current goals
 * Buy a shovel.
 * -Data words.-
 * -Runtime-only data words.-
+* -Conditional brackets.-
+* Nested conditionals.
 * Editor.
 ** Basic linear editor.
 *** -@names@, @addrs@ and etc from forth.-

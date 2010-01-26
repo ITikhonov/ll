@@ -87,7 +87,12 @@ void load() {
 				nm=0; 
 				bs=*p;
 				switch(*p) {
-				case '?': case '$': case '^': state='R'; break;
+				case '?': case ':':
+					lens[cw]+=8;
+					addrs[cw]=realloc(addrs[cw],lens[cw]);
+					*(uint64_t*)(((uint8_t*)addrs[cw])+lens[cw]-8)=*p;
+					state=' '; bs='V'; break;
+				case '$': case '^': state='R'; break;
 				case '\'': pn=((char*)&nm)+1; state='W'; break;
 				default: pn=((char*)&nm)+1; state='W'; bs=0; continue;
 				}
@@ -186,7 +191,7 @@ void compile() {
 	uint8_t *p=comp;
 	int i; for(i=0;i<512;i++) {
 		if(!addrs[i]) continue;
-		uint8_t *backp=0; int backn=-1;
+		uint8_t *backp=0;
 		printf("%s",(char*)(names+i)+1); 
 		switch(types[i]) {
 		case 'A':
@@ -240,12 +245,9 @@ void compile() {
 						*(uint32_t*)p=(uint32_t)(uint64_t)(&llsp); p+=4;
 						break;
 					case '?':
-						*p++=0x74; backp=p; *p++=0x00; backn=v;
-					}
-
-					//printf("backn %d\n",backn);
-					if(backn>=0 && !backn--) {
-						*backp=p-(backp+1);
+						*p++=0x75; backp=p; *p++=0x00; break;
+					case ':':
+						*backp=p-(backp+1); break;
 					}
 					fdump(stdout,st,p-st);
 					printf("\n");
