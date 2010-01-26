@@ -28,7 +28,7 @@ h3. Current goals
 * -Data words.-
 * -Runtime-only data words.-
 * -Conditional brackets.-
-* Nested conditionals.
+* -Nested conditionals.-
 * Editor.
 ** Basic linear editor.
 *** -@names@, @addrs@ and etc from forth.-

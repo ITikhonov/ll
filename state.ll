@@ -7,16 +7,16 @@ drop I 48 ad
 dump F ^2 drop ;
 dup I 48 8d 76 f8 48 89 06
 fetch I 48 8b 00
-find1 F dup fetch $0 cmp ? word fetch cmp ? drop drop $8 add up find1 : drop names sub up ; : ;
-find F names find1 ;
+find1 F dup fetch $0 cmp drop ? ; : word fetch cmp drop ? ; : drop $8 add .find1
+find F names find1 drop names sub ;
 ; I c3
 init F 'key ^101 drop clear ;
-isp F $20 cmp drop ? drop norm clear up : ;
-key F isp word fetch or $8 ror dup dot word store shift fetch $8 sub shift store ;
+isp F $20 cmp drop ? drop norm find dot clear up : ;
+key F isp word fetch or $8 ror word store shift fetch $8 sub shift store ;
 load F ^1 drop ;
 main F ^100 drop ;
 names F ^200 ;
-norm F word fetch shift fetch dup dot ror word store ;
+norm F word fetch shift fetch ror word store ;
 or I 48 0b 06 48 8d 76 08
 reload F ^3 drop ;
 ror I 88 c1 48 ad 48 d3 c8
@@ -27,6 +27,5 @@ shl I 88 c1 48 d3 26 48 ad
 stack F ^103 drop ;
 store I 48 8b 0e 48 89 08 48 ad 48 ad
 sub I 48 29 06 48 ad
-test F $1 dot ?2 $2 dot ;
 up I 48 83 c4 08
 word T 8

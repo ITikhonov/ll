@@ -93,7 +93,7 @@ void load() {
 					*(uint64_t*)(((uint8_t*)addrs[cw])+lens[cw]-8)=*p;
 					state=' '; bs='V'; break;
 				case '$': case '^': state='R'; break;
-				case '\'': pn=((char*)&nm)+1; state='W'; break;
+				case '.': case '\'': pn=((char*)&nm)+1; state='W'; break;
 				default: pn=((char*)&nm)+1; state='W'; bs=0; continue;
 				}
 				break;
@@ -191,7 +191,7 @@ void compile() {
 	uint8_t *p=comp;
 	int i; for(i=0;i<512;i++) {
 		if(!addrs[i]) continue;
-		uint8_t *backp=0;
+		uint8_t *backs[16], **backp=&backs[16];
 		printf("%s",(char*)(names+i)+1); 
 		switch(types[i]) {
 		case 'A':
@@ -223,6 +223,9 @@ void compile() {
 							*(uint32_t*)p=(uint32_t)(uint64_t)(caddrs+v); p+=4;
 						}
 						break;
+					case '.':
+						*p++=0xff; *p++=0x24; *p++=0x25;
+						*(uint32_t*)p=(uint32_t)(uint64_t)(caddrs+v); p+=4; break;
 					case '$':
 					case '\'':
 						memcpy(p,dup,7); p+=7;
@@ -245,9 +248,9 @@ void compile() {
 						*(uint32_t*)p=(uint32_t)(uint64_t)(&llsp); p+=4;
 						break;
 					case '?':
-						*p++=0x75; backp=p; *p++=0x00; break;
+						*p++=0x75; *(--backp)=p; *p++=0x00; break;
 					case ':':
-						*backp=p-(backp+1); break;
+						**backp=p-(*backp+1); backp++; break;
 					}
 					fdump(stdout,st,p-st);
 					printf("\n");
