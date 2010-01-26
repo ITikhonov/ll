@@ -26,7 +26,7 @@ h3. Current goals
 * -Conditional.-
 * Buy a shovel.
 * -Data words.-
-* Runtime-only data words.
+* -Runtime-only data words.-
 * Editor.
 ** Basic linear editor.
 *** -@names@, @addrs@ and etc from forth.-

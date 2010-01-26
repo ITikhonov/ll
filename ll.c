@@ -78,6 +78,9 @@ void load() {
 					if(addrs[cw]) addrs[cw]=realloc(addrs[cw],lens[cw]);
 					types[cw]=*p;
 					nm=0; state=' '; bs='H'; break;
+				case 'T':
+					types[cw]=*p;
+					nm=0; state=' '; bs='L'; break;
 				}
 				break;
 			case 'V':
@@ -88,6 +91,14 @@ void load() {
 				case '\'': pn=((char*)&nm)+1; state='W'; break;
 				default: pn=((char*)&nm)+1; state='W'; bs=0; continue;
 				}
+				break;
+			case 'L':
+				if(*p==' '||*p=='\n') {
+					lens[cw]=nm;
+					addrs[cw]=realloc(addrs[cw],lens[cw]);
+					state=' '; bs='L'; continue;
+				}
+				nm<<=4; if(*p>='a') { nm|=*p-'a'+10; } else { nm|=*p-'0'; }
 				break;
 			case 'W':
 				if(*p==' '||*p=='\n') {
@@ -196,7 +207,7 @@ void compile() {
 					case 0:
 						if(types[v]=='I') { 
 							memcpy(p,addrs[v],lens[v]); p+=lens[v];
-						} else if(types[v]=='D') { 
+						} else if(types[v]=='D'||types[v]=='T') { 
 							printf("\ndata word!\n");
 							v=(uint64_t)(addrs[v]);
 							memcpy(p,dup,7); p+=7;
@@ -269,6 +280,8 @@ void dump() {
 		} break;
 		case 'I':
 		case 'A': fdump(stdout,addrs[i],lens[i]); break;
+		case 'T':
+			printf("[%x]",lens[i]);
 		default:;
 		}
 		printf("\n");
