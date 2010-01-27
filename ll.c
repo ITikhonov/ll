@@ -17,7 +17,7 @@ char *savename="state.ll";
 
 uint64_t names[512];
 void *addrs[512];
-int lens[512];
+uint64_t lens[512];
 char types[512];
 
 uint64_t llkick(uint64_t f);
@@ -286,7 +286,7 @@ void dump() {
 		case 'I':
 		case 'A': fdump(stdout,addrs[i],lens[i]); break;
 		case 'T':
-			printf("[%x]",lens[i]);
+			printf("[%lx]",lens[i]);
 		default:;
 		}
 		printf("\n");

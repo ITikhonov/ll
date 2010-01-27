@@ -32,8 +32,10 @@ h3. Current goals
 * Editor.
 ** Basic linear editor.
 *** -@names@, @addrs@ and etc from forth.-
-*** Runtime-only words.
-*** @find@ on space
+*** -@find@ on space.-
+*** -Add following words to first typed.-
+*** Automatical @ret@ at the end of forth words
+*** Insertion of words.
 * JS interpreter.
 
 
