@@ -255,6 +255,7 @@ void compile() {
 					fdump(stdout,st,p-st);
 					printf("\n");
 				}
+				*p++=0xc3;
 			}
 			case 'D': break;
 		}
