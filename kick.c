@@ -61,7 +61,7 @@ static void wait() {
 	uint64_t c=0;
 	if(poll(fds,1,-1)>0) {
 		if(fds[0].revents&POLLIN) {
-			read(0,&c,8);
+			read(0,&c,1);
 			if(c==0x1b) {down(); exit(0);}
 			if(keyhook>-1) {
 				*(--llsp)=c;
