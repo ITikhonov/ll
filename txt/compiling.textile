@@ -29,12 +29,27 @@ h3. Current goals
 * -Runtime-only data words.-
 * -Conditional brackets.-
 * -Nested conditionals.-
+* Reverse characters order in word to be TYPE D R O W
 * Editor.
 ** Basic linear editor.
 *** Read word.
 *** Display word typed.
 * JS interpreter.
 
+h3. Quick Reference
+
+All numbers in hex, 7 significant digits (start with zero if first digit is letter): @0deadbee@ @08@ @78@.
+
+Everything starting with letters is word call: @word@ @hello@ @init@ @main@.
+
+If word is prepended with dot it's a jump not call: @.recursive@ @.goaway@.
+
+If number prepended with '^' it is a C call to kick.c: @^101@.
+
+if word is prepended with single quote it will push word index in dictionary on stack: @'key@.
+
+Special symbol @?@ checks ZF flag and jump if not zero to next @:@ symbol: @shl8 ? zero : notzero@. Note
+that in case of zero both zero and nonzero will be executed (it is not if...else it's just if {}).
 
 h3. Network packet
 
