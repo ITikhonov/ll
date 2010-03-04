@@ -62,8 +62,8 @@ void load() {
 				else if(*p!=' ') { state=bs; continue; }
 				break;
 			case 'N':
-				if(*p==' ') { cw=find(nm); state=' '; bs='T'; break; }
-				*pn++=*p; break;
+				if(*p==' ') { cw=find(nm<<8); state=' '; bs='T'; break; }
+				nm=(nm<<8)|*p; break;
 			case 'T':
 				switch(*p) {
 				case 'F':
@@ -107,13 +107,14 @@ void load() {
 				break;
 			case 'W':
 				if(*p==' '||*p=='\n') {
+					nm<<=8;
 					lens[cw]+=8;
 					addrs[cw]=realloc(addrs[cw],lens[cw]);
 					printf("word: %c %.7s\n",bs,1+(char*)&nm);
 					*(uint64_t*)(((uint8_t*)addrs[cw])+lens[cw]-8)=(find(nm)<<8)|bs;
 					state=' '; bs='V'; continue;
 				}
-				*pn++=*p;
+				nm=(nm<<8)|*p;
 				break;
 			case 'R':
 				if(*p==' '||*p=='\n') {
@@ -338,8 +339,8 @@ int main(int argc,char *argv[]) {
 	memset(lens,0,sizeof(lens));
 	memset(types,0,sizeof(types));
 
-	find(*(uint64_t*)"\0init\0\0");
-	find(*(uint64_t*)"\0main\0\0");
+	find(*(uint64_t*)"\0tini\0\0");
+	find(*(uint64_t*)"\0niam\0\0");
 	if(argc>1) { savename=argv[1]; }
 	load(); dump();
 	soreload();
