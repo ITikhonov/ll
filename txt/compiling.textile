@@ -31,11 +31,8 @@ h3. Current goals
 * -Nested conditionals.-
 * Editor.
 ** Basic linear editor.
-*** -@names@, @addrs@ and etc from forth.-
-*** -@find@ on space.-
-*** -Add following words to first typed.-
-*** Automatical @ret@ at the end of forth words
-*** Insertion of words.
+*** Read word.
+*** Display word typed.
 * JS interpreter.
 
 
