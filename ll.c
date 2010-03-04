@@ -102,7 +102,7 @@ void load() {
 				case '7':
 				case '8':
 				case '9': nm=*p-'0'; bs='$';
-				case '$': case '^': state='R'; break;
+				case '^': state='R'; break;
 				case '.': case '\'': pn=((char*)&nm)+1; state='W'; break;
 				default: pn=((char*)&nm)+1; state='W'; bs=0; continue;
 				}
