@@ -15,4 +15,4 @@ state.ll: core.ll editor.ll
 	cat core.ll editor.ll > state.ll
 	
 clean:
-	rm ll ll.o ll-i64.o kick.o kick.so state.ll
+	rm -f ll ll.o ll-i64.o kick.o kick.so state.ll
