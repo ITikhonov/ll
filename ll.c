@@ -92,6 +92,16 @@ void load() {
 					addrs[cw]=realloc(addrs[cw],lens[cw]);
 					*(uint64_t*)(((uint8_t*)addrs[cw])+lens[cw]-8)=*p;
 					state=' '; bs='V'; break;
+				case '0':
+				case '1':
+				case '2':
+				case '3':
+				case '4':
+				case '5':
+				case '6':
+				case '7':
+				case '8':
+				case '9': nm=*p-'0'; bs='$';
 				case '$': case '^': state='R'; break;
 				case '.': case '\'': pn=((char*)&nm)+1; state='W'; break;
 				default: pn=((char*)&nm)+1; state='W'; bs=0; continue;
