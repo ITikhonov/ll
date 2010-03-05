@@ -280,7 +280,7 @@ void dump() {
 	int i;
 	for(i=0;i<512;i++) {
 		if(!addrs[i]) continue;
-		printf("%d: %.7s[%c] ",i,((char *)(names+i))+1,types[i]);
+		printf("%d: %.7s[%c/%lx] ",i,((char *)(names+i))+1,types[i],names[i]);
 		switch(types[i]) {
 		case 'F': {
 			uint64_t *p=(uint64_t*)(addrs[i]);

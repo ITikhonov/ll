@@ -29,16 +29,16 @@ h3. Current goals
 * -Runtime-only data words.-
 * -Conditional brackets.-
 * -Nested conditionals.-
-* Reverse characters order in word to be TYPE D R O W
+* -Reverse characters order in word to be TYPE D R O W.-
 * Editor.
 ** Basic linear editor.
-*** Read word.
+*** -Read word.-
 *** Display word typed.
 * JS interpreter.
 
 h3. Quick Reference
 
-All numbers in hex, 7 significant digits (start with zero if first digit is letter): @0deadbee@ @08@ @78@.
+All numbers in hex, 7 significant digits (start with zero if the first digit is a letter): @0deadbee@ @08@ @78@.
 
 Everything starting with letters is word call: @word@ @hello@ @init@ @main@.
 

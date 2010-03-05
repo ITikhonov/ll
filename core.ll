@@ -15,7 +15,7 @@ load F ^1 drop
 main F ^100 drop
 names F ^200
 or I 48 0b 06 48 8d 76 08
-over I 48 8b 46 08
+over I 48 8d 76 f8 48 89 06 48 8b 46 08
 realloc F ^204
 reload F ^3 drop
 rol8 I 48 c1 c0 08
@@ -28,3 +28,4 @@ stack F ^103 drop
 store I 48 8b 0e 48 89 08 48 ad 48 ad
 sub I 48 29 06 48 ad
 up I 48 83 c4 08
+swap I 48 89 c2 48 8b 06 48 89 16
