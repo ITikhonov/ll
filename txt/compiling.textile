@@ -33,7 +33,9 @@ h3. Current goals
 * Editor.
 ** Basic linear editor.
 *** -Read word.-
-*** Display word typed.
+*** -Display word typed.-
+*** -Display word definition.-
+*** Display hex definitions.
 * JS interpreter.
 
 h3. Quick Reference

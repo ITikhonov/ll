@@ -158,6 +158,7 @@ int namecmp(const void *a, const void *b) {
 }
 
 void save() {
+	return;
 	FILE *f=fopen(savename,"w");
 	int idx[512];
 	

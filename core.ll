@@ -2,6 +2,7 @@ add I 48 01 06 48 ad
 addrs F ^201
 char F ^104 drop
 cmp I 48 3b 06
+cmp8 I 3a 06
 decm I ff 08 48 ad
 dot F ^102 drop
 drop I 48 ad
