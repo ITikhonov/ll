@@ -260,9 +260,10 @@ void compile() {
 						*(uint32_t*)p=(uint32_t)(uint64_t)(&llsp); p+=4;
 						break;
 					case '?':
-						*p++=0x75; *(--backp)=p; *p++=0x00; break;
+						*p++=0x0f; *p++=0x85; *(--backp)=p;
+						*p++=0x00; *p++=0x00; *p++=0x00; *p++=0x00; break;
 					case ':':
-						**backp=p-(*backp+1); backp++; break;
+						*(uint32_t*)(*backp)=p-(*backp+4); backp++; break;
 					}
 					fdump(stdout,st,p-st);
 					printf("\n");
@@ -274,6 +275,7 @@ void compile() {
 		if(caddrs[i]) fdump(stdout,caddrs[i],p-caddrs[i]);
 		printf("\n");
 	}
+	printf("CODESIZE: %lu\n", p-comp);
 }
 
 void dump() {
