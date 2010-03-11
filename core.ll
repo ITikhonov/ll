@@ -9,7 +9,7 @@ drop I 48 ad
 dump F ^2 drop
 dup I 48 8d 76 f8 48 89 06
 fetch I 48 8b 00
-; I c3
+ret I c3
 init F 'key ^101 drop
 lens F ^202
 load F ^1 drop
