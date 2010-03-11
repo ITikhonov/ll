@@ -66,6 +66,19 @@ h3. Word types
 
 *T* is a temporary data word, instead of data size is specified.
 
+h3. Editor (small)
+
+Two states - word selection and word editing. Both operates on words.
+
+On space in selection mode editor goes to edit mode. In editor mode it replaces word under cursor and goes right.
+
+On letter key in both modes letter is pushed into word.
+
+On question mark in selection mode word definition displayed. In editor mode word definition displayed or if no word
+conditional is written.
+
+Return key - in both modes everything is reset.
+
 h3. Editor
 
 Hitting a key puts it in the word buffer. Hitting space applies word and
