@@ -35,8 +35,9 @@ h3. Current goals
 *** -Read word.-
 *** -Display word typed.-
 *** -Display word definition.-
-*** Separate display from input.
-*** Display hex definitions.
+*** -Separate display from input.-
+*** -Replace word under cursor when typing.-
+*** Expand word if needed
 * JS interpreter.
 
 h3. Quick Reference
