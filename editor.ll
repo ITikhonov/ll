@@ -18,7 +18,7 @@ find    F over fetch end cmp drop ? drop names sub ret : swap 8 add swap .find
 replace F word fetch 0 cmp drop ? drop ret : names swap find 5 shl pos fetch store
 right   F pos fetch 8 add pos store 0 word store
 show    F addrs over add fetch  swap lens add fetch over add swap showa
-showa   F cmp ? drop drop ret : dup cursor 8 add .showa
+showa   F cmp ? dup ecursor drop drop ret : dup cursor 8 add .showa
 print   F 0 qword 27 qword 2e qword kick number spec 3f char 3f char 3f char dot
 qword   F cmp8 ? char shr8 3 shl names add fetch pword up ret : drop
 number  F 24 cmp8 drop ? shr8 dot up ret :
@@ -27,5 +27,6 @@ spec    F 3f cmp drop ? char 20 char up ret : 3a cmp drop ? char 20 char up ret 
 test    F cmp drop
 cursor  F pos fetch cmp drop ? cursora : fetch print
 cursora F 7c char word fetch 0 cmp drop ? drop ret : pword up drop
+ecursor F pos fetch cmp drop ? cursora :
 refresh F clr def fetch names over add fetch pword show
 clr     F 0d char 1b char 5b char 30 char 4b char
