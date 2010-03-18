@@ -64,6 +64,13 @@ static void append(int cw, uint8_t t, uint64_t v) {
 	lens[cw]=nlen;
 }
 
+static void append8(int cw, uint8_t v) {
+	int nlen=lens[cw]+1;
+	addrs[cw].v=realloc(addrs[cw].v,nlen);
+	*(addrs[cw].v+lens[cw])=v;
+	lens[cw]=nlen;
+}
+
 
 void load() {
 #define C1 {nm<<=8;if(nm>>56)putchar(nm>>56);}
@@ -85,11 +92,11 @@ void load() {
 				switch(tp){
 				case 'N':
 					printf("N:%08lx\n",nm);
-					if(prefix=='@') {
-						append(cw,'^',nm);
-						prefix=0;
+					if(types[cw]!='F') {
+						append8(cw,nm);
 					} else {
-						append(cw,'$',nm);
+						if(prefix=='@') { append(cw,'^',nm); prefix=0; }
+						else { append(cw,'$',nm); }
 					}
 					nm=0; break;
 				case ' ': case '\r': case '\n': case '\t': nm=0; break;
@@ -97,9 +104,11 @@ void load() {
 				case '@': prefix='@'; nm=0; break;
 				default :
 					if(tc==':') {
-						cw=find(nm);
-						printf("def : %d ",cw); C1 C1 C1 C1 C1 C1 C1 C1; putchar('\n');
-						types[cw]='F'; lens[cw]=0; addrs[cw].f=realloc(addrs[cw].f,lens[cw]);
+						if(tp=='L') {
+							cw=find(nm);
+							printf("def : %d ",cw); C1 C1 C1 C1 C1 C1 C1 C1; putchar('\n');
+							types[cw]='F'; lens[cw]=0; addrs[cw].f=realloc(addrs[cw].f,lens[cw]);
+						}
 					} else {
 						printf("prefix: %c %02x\n",prefix?prefix:' ',prefix);
 						if(prefix=='@') {
@@ -116,6 +125,12 @@ void load() {
 			switch(tc) {
 			case 'L': nm<<=8; nm|=*p; break;
 			case 'N': nm<<=4; if(*p>='A') { nm|=*p-'A'+10; } else { nm|=*p-'0'; } break;
+			case ':':
+				if(tp==':') switch(types[cw]) {
+				case 'F': types[cw]='I'; break;
+				case 'I': types[cw]='D'; break;
+				case 'D': types[cw]='A'; break;
+				} break;
 			default : nm=tc<<8;
 			}
 			p++; tp=tc;
@@ -229,7 +244,7 @@ void dump() {
 		if(!addrs[i].v) continue;
 		uint64_t nm=names[i];
 		C1 C1 C1 C1 C1 C1 C1 C1
-		printf(": ");
+		printf(":(%c) ",types[i]);
 		switch(types[i]) {
 		case 'F': {
 			struct fcode *p=addrs[i].f;
@@ -249,6 +264,7 @@ void dump() {
 			}
 		} break;
 		case 'I':
+		case 'D':
 		case 'A': fdump(stdout,addrs[i].v,lens[i]); break;
 		case 'T':
 			printf("[%lx]",lens[i]);
