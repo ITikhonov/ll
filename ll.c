@@ -15,25 +15,35 @@ extern void llvm();
 
 char *savename="state.ll";
 
+struct fcode { uint8_t t; uint64_t v; } __attribute__((__packed__));
+union faddr {
+	uint8_t *v;
+	struct fcode *f;
+};
+
 uint64_t names[512];
-void *addrs[512];
+union faddr addrs[512];
 uint64_t lens[512];
 char types[512];
 
 uint64_t llkick(uint64_t f);
 
 int find(uint64_t w) {
-	int fr=0,n;
+	//printf("f:====\n");
+	int n;
 	for(n=0;n<512;n++) {
-		if(!addrs[n]) { fr=n; break; }
-		if(names[n]==w) { return n; }
+		//printf("f:%d(%p) %08lx %08lx\n",n,addrs[n].v,w,names[n]);
+		if(!names[n]) {
+			//printf("f:alloc %lx %d\n",w,n);
+			names[n]=w;
+			types[n]='A'; addrs[n].v=malloc(lens[n]=1);
+			*addrs[n].v=0xc3;
+			break;
+		}
+		if(names[n]==w) break;
 	}
-	for(;n<512;n++) {
-		if(names[n]==w) { return n; }
-	}
-	n=fr; names[n]=w;
-	types[n]='A'; addrs[n]=malloc(lens[n]=1);
-	*(unsigned char*)addrs[n]=0xc3;
+
+	//printf("f:ret %d\n",n);
 	return n;
 }
 
@@ -44,112 +54,78 @@ void fdump(FILE *f, uint8_t *a, int l) {
 	}
 }
 
+static void append(int cw, uint8_t t, uint64_t v) {
+	int nlen=lens[cw]+sizeof(struct fcode);
+	addrs[cw].f=realloc(addrs[cw].f,nlen);
+	union faddr c;
+	c.v=addrs[cw].v+lens[cw];
+	c.f->t=t;
+	c.f->v=v;
+	lens[cw]=nlen;
+}
+
+
 void load() {
-	int f=open(savename,O_RDONLY);
+#define C1 {nm<<=8;if(nm>>56)putchar(nm>>56);}
+	int f=open("test.ll",O_RDONLY);
 	if(f<0) return;
 	uint64_t nm=0;
-	char state='N',bs=0,*pn=((char*)&nm)+1;
-	int cw=-1;
+	int tp=' ',tc=0,cw=-1,prefix=0;
 	for(;;) {
 		char buf[10240], *p=buf, *e;
 		int n=read(f,p,sizeof(buf));
 		if(n<=0) break;
 		e=p+n;
 		while(p<e) {
-			switch(state) {
-			case ' ':
-				if(*p=='\n') { state='N'; nm=0; pn=((char*)&nm)+1; }
-				else if(*p!=' ') { state=bs; continue; }
-				break;
-			case 'N':
-				if(*p==' ') { cw=find(nm<<8); state=' '; bs='T'; break; }
-				nm=(nm<<8)|*p; break;
-			case 'T':
-				switch(*p) {
-				case 'F':
-					lens[cw]=0;
-					addrs[cw]=realloc(addrs[cw],lens[cw]);
-					types[cw]='F';
-					state=' '; bs='V'; break;
-				case 'A':
-				case 'I':
-				case 'D':
-					lens[cw]=0;
-					if(addrs[cw]) addrs[cw]=realloc(addrs[cw],lens[cw]);
-					types[cw]=*p;
-					nm=0; state=' '; bs='H'; break;
-				case 'T':
-					types[cw]=*p;
-					nm=0; state=' '; bs='L'; break;
+			if(*p>='a'&&*p<='z') {tc='L';}
+			else if((*p>='0'&&*p<='9')||(*p>='A'&&*p<='F')) {tc='N';}
+			else {tc=*p;}
+
+			if(tp!=tc){
+				switch(tp){
+				case 'N':
+					printf("N:%08lx\n",nm);
+					if(prefix=='@') {
+						append(cw,'^',nm);
+						prefix=0;
+					} else {
+						append(cw,'$',nm);
+					}
+					nm=0; break;
+				case ' ': case '\r': case '\n': case '\t': nm=0; break;
+				case ':': nm=0; break;
+				case '@': prefix='@'; nm=0; break;
+				default :
+					if(tc==':') {
+						cw=find(nm);
+						printf("def : %d ",cw); C1 C1 C1 C1 C1 C1 C1 C1; putchar('\n');
+						types[cw]='F'; lens[cw]=0; addrs[cw].f=realloc(addrs[cw].f,lens[cw]);
+					} else {
+						printf("prefix: %c %02x\n",prefix?prefix:' ',prefix);
+						if(prefix=='@') {
+							append(cw,'@',find(nm));
+						} else {
+							append(cw,0,find(nm));
+						}
+						printf(" word: %c",prefix?prefix:' '); C1 C1 C1 C1 C1 C1 C1 C1; putchar('\n');
+						prefix=0;
+					}
 				}
-				break;
-			case 'V':
-				nm=0; 
-				bs=*p;
-				switch(*p) {
-				case '?': case ':':
-					lens[cw]+=8;
-					addrs[cw]=realloc(addrs[cw],lens[cw]);
-					*(uint64_t*)(((uint8_t*)addrs[cw])+lens[cw]-8)=*p;
-					state=' '; bs='V'; break;
-				case '0':
-				case '1':
-				case '2':
-				case '3':
-				case '4':
-				case '5':
-				case '6':
-				case '7':
-				case '8':
-				case '9': nm=*p-'0'; bs='$';
-				case '^': state='R'; break;
-				case '.': case '\'': pn=((char*)&nm)+1; state='W'; break;
-				default: pn=((char*)&nm)+1; state='W'; bs=0; continue;
-				}
-				break;
-			case 'L':
-				if(*p==' '||*p=='\n') {
-					lens[cw]=nm;
-					addrs[cw]=realloc(addrs[cw],lens[cw]);
-					state=' '; bs='L'; continue;
-				}
-				nm<<=4; if(*p>='a') { nm|=*p-'a'+10; } else { nm|=*p-'0'; }
-				break;
-			case 'W':
-				if(*p==' '||*p=='\n') {
-					nm<<=8;
-					lens[cw]+=8;
-					addrs[cw]=realloc(addrs[cw],lens[cw]);
-					printf("word: %c %.7s\n",bs,1+(char*)&nm);
-					*(uint64_t*)(((uint8_t*)addrs[cw])+lens[cw]-8)=(find(nm)<<8)|bs;
-					state=' '; bs='V'; continue;
-				}
-				nm=(nm<<8)|*p;
-				break;
-			case 'R':
-				if(*p==' '||*p=='\n') {
-					lens[cw]+=8;
-					addrs[cw]=realloc(addrs[cw],lens[cw]);
-					*(uint64_t*)(((uint8_t*)addrs[cw])+lens[cw]-8)=(nm<<8)|bs;
-					state=' '; bs='V'; continue;
-				}
-				nm<<=4; if(*p>='a') { nm|=*p-'a'+10; } else { nm|=*p-'0'; }
-				break;
-			case 'H':
-				if(*p==' '||*p=='\n') {
-					lens[cw]+=1;
-					addrs[cw]=realloc(addrs[cw],lens[cw]);
-					*(((uint8_t*)addrs[cw])+lens[cw]-1)=nm;
-					nm=0; state=' '; bs='H'; continue;
-				}
-				nm<<=4; if(*p>='a') { nm|=*p-'a'+10; } else { nm|=*p-'0'; }
 			}
-			p++;
+
+			switch(tc) {
+			case 'L': nm<<=8; nm|=*p; break;
+			case 'N': nm<<=4; if(*p>='A') { nm|=*p-'A'+10; } else { nm|=*p-'0'; } break;
+			default : nm=tc<<8;
+			}
+			p++; tp=tc;
 		}
 		
 	}
 	close(f);
+	//exit(0);
 	return;
+#undef C1
 }
 
 
@@ -157,46 +133,11 @@ int namecmp(const void *a, const void *b) {
 	return memcmp(((char *)(names+*(int*)a))+1,((char *)(names+*(int *)b))+1,7);
 }
 
-void save() {
-	return;
-	FILE *f=fopen(savename,"w");
-	int idx[512];
-	
-	int j; for(j=0;j<512;j++) { idx[j]=j; }
-	qsort(idx,512,sizeof(*idx),namecmp);
-
-	for(j=0;j<512;j++) {
-		int i=idx[j]; 
-		if(!addrs[i]) continue;
-		fprintf(f,"%.7s %c",((char *)(names+i))+1,types[i]);
-		switch(types[i]) {
-		case 'F':
-			{
-				uint64_t *a=(uint64_t*)((uint8_t*)addrs[i]);
-				int l=lens[i]/8;
-				while(l--) {
-					uint64_t v=(*a)>>8; uint8_t c=(*a++)&0xff;
-					if(c&&c!='\'') { fprintf(f," %c%lx",c,v); }
-					else { fprintf(f," %.1s%.7s",(c?((char*)&c):""),((char*)(names+v))+1); }
-				}
-			}
-			break;
-		case 'D':
-			fdump(f,((uint8_t*)addrs[i])+5,lens[i]-5);
-			break;
-		case 'A':
-		case 'I':
-			fdump(f,addrs[i],lens[i]);
-		default:;
-		}
-		fprintf(f,"\n");
-	}
-	fclose(f);
-	
-}
+#if 0
 
 uint8_t comp[65535];
 uint8_t *caddrs[512];
+
 
 void compile() {
 	static uint8_t dup[7]={0x48, 0x8d, 0x76, 0xf8, 0x48, 0x89, 0x06};
@@ -278,28 +219,37 @@ void compile() {
 	printf("CODESIZE: %lu\n", p-comp);
 }
 
+#endif
+
 void dump() {
+#define C1 {nm<<=8;if(nm>>56)putchar(nm>>56);}
 	printf("\n=== dump ===\n");
 	int i;
 	for(i=0;i<512;i++) {
-		if(!addrs[i]) continue;
-		printf("%d: %.7s[%c/%lx] ",i,((char *)(names+i))+1,types[i],names[i]);
+		if(!addrs[i].v) continue;
+		uint64_t nm=names[i];
+		C1 C1 C1 C1 C1 C1 C1 C1
+		printf(": ");
 		switch(types[i]) {
 		case 'F': {
-			uint64_t *p=(uint64_t*)(addrs[i]);
-			uint64_t *e=(uint64_t*)(addrs[i]+lens[i]);
+			struct fcode *p=addrs[i].f;
+			struct fcode *e=(struct fcode*)(addrs[i].v+lens[i]);
 			for(;p<e;p++) {
-				switch((char)*p) {
+				switch(p->t) {
+				case '@':
+					printf("@");
 				case 0:
-				case '\'':
-					printf("%.1s%.7s[%d] ",(char)*p?"'":"",(char*)(names+(*p>>8))+1,(int)*p>>8); break;
+					{ uint64_t nm=names[p->v];
+					C1 C1 C1 C1 C1 C1 C1 C1
+					printf(" ");
+					} break;
 				default:
-					printf("%c%lx ",(char)*p,*p>>8);
+					printf("%c%lx ",p->t,p->v);
 				}
 			}
 		} break;
 		case 'I':
-		case 'A': fdump(stdout,addrs[i],lens[i]); break;
+		case 'A': fdump(stdout,addrs[i].v,lens[i]); break;
 		case 'T':
 			printf("[%lx]",lens[i]);
 		default:;
@@ -307,6 +257,7 @@ void dump() {
 		printf("\n");
 	}
 	printf("%ld\n",*llsp);
+#undef C1
 }
 
 void *dl=0;
@@ -336,7 +287,7 @@ void soreload() {
 
 uint64_t llkick(uint64_t f) {
 	switch(f){
-	case 0: save(); return 0;
+	//case 0: save(); return 0;
 	case 1: load(); return 0;
 	case 2: dump(); return 0;
 	case 3: soreload(); return 0;
@@ -352,18 +303,18 @@ int main(int argc,char *argv[]) {
 	memset(lens,0,sizeof(lens));
 	memset(types,0,sizeof(types));
 
-	find(*(uint64_t*)"\0tini\0\0");
-	find(*(uint64_t*)"\0niam\0\0");
+	find(*(uint64_t*)"tini\0\0\0");
+	find(*(uint64_t*)"niam\0\0\0");
 	if(argc>1) { savename=argv[1]; }
 	load(); dump();
 	soreload();
-	compile();
+	//compile();
 
 	llsp--;
 
-	llcall(caddrs[0]);
+	//llcall(caddrs[0]);
 	for(;;) {
-		llcall(caddrs[1]);
+		//llcall(caddrs[1]);
 	}
 	sodown();
 }
