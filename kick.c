@@ -11,12 +11,12 @@
 extern llcall(void *p);
 extern uint64_t *llsp;
 
-extern uint64_t names[512];
-extern void *addrs[512];
+extern uint8_t names[];
+extern uint8_t addrs[];
+extern uint8_t lens[];
+extern uint8_t types[];
+
 extern void *caddrs[512];
-extern int lens[512];
-extern char types[512];
-extern void save();
 
 struct termios oldkey, newkey;
 int oldkbmode;
