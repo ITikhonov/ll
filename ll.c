@@ -111,9 +111,7 @@ void load() {
 						}
 					} else {
 						printf("prefix: %c %02x\n",prefix?prefix:' ',prefix);
-						if(nm==0x7b00||nm==0x7d00) {
-							append(cw,nm>>8,0);
-						} else if(prefix=='@') {
+						if(prefix=='@') {
 							append(cw,'@',find(nm));
 						} else {
 							append(cw,0,find(nm));
@@ -178,7 +176,12 @@ void compile() {
 					else { fprintf(stdout," %.1s%.7s",(c?((char*)&c):""),((char*)(names+v))); }
 					switch(c) {
 					case 0:
-						if(types[v]=='I') { 
+						if(v==2) { // '{'
+							*p++=0x0f; *p++=0x85; *(--backp)=p;
+							*p++=0x00; *p++=0x00; *p++=0x00; *p++=0x00; break;
+						} else if(v==3) { // '}'
+							*(uint32_t*)(*backp)=p-(*backp+4); backp++; break;
+						} else if(types[v]=='I') { 
 							memcpy(p,addrs[v].v,lens[v]); p+=lens[v];
 						} else if(types[v]=='D'||types[v]=='T') { 
 							printf("\ndata word!\n");
@@ -215,11 +218,6 @@ void compile() {
 						*p++=0x48; *p++=0x8b; *p++=0x34; *p++=0x25;
 						*(uint32_t*)p=(uint32_t)(uint64_t)(&llsp); p+=4;
 						break;
-					case '{':
-						*p++=0x0f; *p++=0x85; *(--backp)=p;
-						*p++=0x00; *p++=0x00; *p++=0x00; *p++=0x00; break;
-					case '}':
-						*(uint32_t*)(*backp)=p-(*backp+4); backp++; break;
 					}
 					fdump(stdout,st,p-st);
 					printf("\n");
@@ -321,6 +319,7 @@ int main(int argc,char *argv[]) {
 
 	find(*(uint64_t*)"tini\0\0\0");
 	find(*(uint64_t*)"niam\0\0\0");
+	find(0x7b00); find(0x7d00);
 	if(argc>1) { savename=argv[1]; }
 	load(); dump();
 	soreload();
@@ -329,9 +328,8 @@ int main(int argc,char *argv[]) {
 	llsp--;
 
 	llcall(caddrs[0]);
-	for(;;) {
-		llcall(caddrs[1]);
-	}
+	llcall(caddrs[1]);
 	sodown();
+	return 0;
 }
 
