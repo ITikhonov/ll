@@ -74,7 +74,7 @@ static void append8(int cw, uint8_t v) {
 
 void load() {
 #define C1 {nm<<=8;if(nm>>56)putchar(nm>>56);}
-	int f=open("test.ll",O_RDONLY);
+	int f=open(savename,O_RDONLY);
 	if(f<0) return;
 	uint64_t nm=0;
 	int tp=' ',tc=0,cw=-1,prefix=0;
