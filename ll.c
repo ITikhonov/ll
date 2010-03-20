@@ -102,6 +102,8 @@ void load() {
 				case ' ': case '\r': case '\n': case '\t': nm=0; break;
 				case ':': nm=0; break;
 				case '@': prefix='@'; nm=0; break;
+				case '|': prefix='|'; nm=0; break;
+				case '$': printf(" char %c %02x\n",*p,*p); append(cw,'$',*p); tc=' '; break;
 				default :
 					if(tc==':') {
 						if(tp!=':') {
@@ -113,6 +115,8 @@ void load() {
 						printf("prefix: %c %02x\n",prefix?prefix:' ',prefix);
 						if(prefix=='@') {
 							append(cw,'@',find(nm));
+						} else if(prefix=='|') {
+							append(cw,'|',find(nm));
 						} else {
 							append(cw,0,find(nm));
 						}
@@ -194,7 +198,7 @@ void compile() {
 							*(uint32_t*)p=(uint32_t)(uint64_t)(caddrs+v); p+=4;
 						}
 						break;
-					case '_':
+					case '|':
 						*p++=0xff; *p++=0x24; *p++=0x25;
 						*(uint32_t*)p=(uint32_t)(uint64_t)(caddrs+v); p+=4; break;
 					case '$':
