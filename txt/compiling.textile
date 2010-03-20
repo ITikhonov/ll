@@ -38,7 +38,9 @@ h3. Current goals
 *** -Separate display from input.-
 *** -Replace word under cursor when typing.-
 *** -Operators parsing.-
-*** Make compilation working.
+*** -Make compilation working.-
+*** -{} put offset only, rest is compiled via inlines.-
+*** Port word displaying to new dialect.
 * JS interpreter.
 
 h3. Quick Reference
@@ -67,6 +69,40 @@ h3. Word types
 *D* is a data word, on execution pointer to content will be pushed on stack.
 
 *T* is a temporary data word, instead of data size is specified.
+
+h3. Editor (new)
+
+Actions:
+
+* Create word (on colon).
+* Cycle type (on consequent colons).
+* Append to definition (on lexical boundary).
+
+Input:
+
+* *L*etters [a-z].
+* *N*umbers [0-9A-F].
+* *O*perators !"#$%&\'()*+,-./;<=>?@[\\]^_`{|}~
+* *S*pecial [:]
+* *W*hitespace [ \t\r\n]
+
+On transitions:
+
+1. LN LO LW NL NO NW OL ON OO OW - push first part into buffer and append buffer to current word.
+2. LS - push first part into buffer, create word from buffer and set it to current.
+3. LL - push first part into buffer.
+4. NN - push first part into buffer.
+5. NS OS WS - syntax error.
+6. SS - cycle type of current word.
+7. WW WL WN WO SL SN SO SW - do nothing.
+
+On key:
+
+* W: (1:LW NW OW)        (7:WW SW)
+* L: (1:NL OL)    (3:LL) (7:WL SL)
+* N: (1:LN ON)    (4:NN) (7:WN SN)
+* O: (1:LO NO OO)        (7:WO SO)
+* S: (2:LS)       (6:SS) (5:NS OS WS)
 
 h3. Editor (small)
 

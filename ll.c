@@ -177,7 +177,7 @@ void compile() {
 					switch(c) {
 					case 0:
 						if(v==2) { // '{'
-							*p++=0x0f; *p++=0x85; *(--backp)=p;
+							*(--backp)=p;
 							*p++=0x00; *p++=0x00; *p++=0x00; *p++=0x00; break;
 						} else if(v==3) { // '}'
 							*(uint32_t*)(*backp)=p-(*backp+4); backp++; break;
