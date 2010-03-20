@@ -106,12 +106,14 @@ void load() {
 					if(tc==':') {
 						if(tp!=':') {
 							cw=find(nm);
-							printf("def : %d ",cw); C1 C1 C1 C1 C1 C1 C1 C1; putchar('\n');
+							printf("def : %d %lx ",cw,nm); C1 C1 C1 C1 C1 C1 C1 C1; putchar('\n');
 							types[cw]='F'; lens[cw]=0; addrs[cw].f=realloc(addrs[cw].f,lens[cw]);
 						}
 					} else {
 						printf("prefix: %c %02x\n",prefix?prefix:' ',prefix);
-						if(prefix=='@') {
+						if(nm==0x7b00||nm==0x7d00) {
+							append(cw,nm>>8,0);
+						} else if(prefix=='@') {
 							append(cw,'@',find(nm));
 						} else {
 							append(cw,0,find(nm));
@@ -148,8 +150,6 @@ int namecmp(const void *a, const void *b) {
 	return memcmp(((char *)(names+*(int*)a))+1,((char *)(names+*(int *)b))+1,7);
 }
 
-#if 0
-
 uint8_t comp[65535];
 uint8_t *caddrs[512];
 
@@ -158,31 +158,31 @@ void compile() {
 	static uint8_t dup[7]={0x48, 0x8d, 0x76, 0xf8, 0x48, 0x89, 0x06};
 	uint8_t *p=comp;
 	int i; for(i=0;i<512;i++) {
-		if(!addrs[i]) continue;
+		if(!addrs[i].f) continue;
 		uint8_t *backs[16], **backp=&backs[16];
 		printf("%s",(char*)(names+i)+1); 
 		switch(types[i]) {
 		case 'A':
-			caddrs[i]=p; memcpy(p,addrs[i],lens[i]); p+=lens[i];
+			caddrs[i]=p; memcpy(p,addrs[i].v,lens[i]); p+=lens[i];
 			fdump(stdout,caddrs[i],lens[i]);
 			break;
 		case 'F':
 			caddrs[i]=p;
 			{
-				uint64_t *a=(uint64_t*)((uint8_t*)addrs[i]);
-				int l=lens[i]/8;
+				struct fcode *a=addrs[i].f;
+				int l=lens[i]/sizeof(struct fcode);
 				while(l--) {
 					uint8_t *st=p;
-					uint64_t v=(*a)>>8; uint8_t c=(*a++)&0xff;
-					if(c&&c!='\'') { fprintf(stdout," %c%lx",c,v); }
-					else { fprintf(stdout," %.1s%.7s",(c?((char*)&c):""),((char*)(names+v))+1); }
+					uint64_t v=a->v; uint8_t c=a->t;
+					if(c&&c!='@') { fprintf(stdout," %c%lx",c,v); }
+					else { fprintf(stdout," %.1s%.7s",(c?((char*)&c):""),((char*)(names+v))); }
 					switch(c) {
 					case 0:
 						if(types[v]=='I') { 
-							memcpy(p,addrs[v],lens[v]); p+=lens[v];
+							memcpy(p,addrs[v].v,lens[v]); p+=lens[v];
 						} else if(types[v]=='D'||types[v]=='T') { 
 							printf("\ndata word!\n");
-							v=(uint64_t)(addrs[v]);
+							v=(uint64_t)(addrs[v].v);
 							memcpy(p,dup,7); p+=7;
 							*p++=0x48; *p++=0xb8;
 							*(uint64_t*)p=v; p+=8;
@@ -191,11 +191,11 @@ void compile() {
 							*(uint32_t*)p=(uint32_t)(uint64_t)(caddrs+v); p+=4;
 						}
 						break;
-					case '.':
+					case '_':
 						*p++=0xff; *p++=0x24; *p++=0x25;
 						*(uint32_t*)p=(uint32_t)(uint64_t)(caddrs+v); p+=4; break;
 					case '$':
-					case '\'':
+					case '@':
 						memcpy(p,dup,7); p+=7;
 						*p++=0x48; *p++=0xb8;
 						*(uint64_t*)p=v; p+=8;
@@ -215,26 +215,26 @@ void compile() {
 						*p++=0x48; *p++=0x8b; *p++=0x34; *p++=0x25;
 						*(uint32_t*)p=(uint32_t)(uint64_t)(&llsp); p+=4;
 						break;
-					case '?':
+					case '{':
 						*p++=0x0f; *p++=0x85; *(--backp)=p;
 						*p++=0x00; *p++=0x00; *p++=0x00; *p++=0x00; break;
-					case ':':
+					case '}':
 						*(uint32_t*)(*backp)=p-(*backp+4); backp++; break;
 					}
 					fdump(stdout,st,p-st);
 					printf("\n");
+					a++;
 				}
 				*p++=0xc3;
 			}
 			case 'D': break;
 		}
+		printf("total: ");
 		if(caddrs[i]) fdump(stdout,caddrs[i],p-caddrs[i]);
 		printf("\n");
 	}
 	printf("CODESIZE: %lu\n", p-comp);
 }
-
-#endif
 
 void dump() {
 #define C1 {nm<<=8;if(nm>>56)putchar(nm>>56);}
@@ -324,13 +324,13 @@ int main(int argc,char *argv[]) {
 	if(argc>1) { savename=argv[1]; }
 	load(); dump();
 	soreload();
-	//compile();
+	compile();
 
 	llsp--;
 
-	//llcall(caddrs[0]);
+	llcall(caddrs[0]);
 	for(;;) {
-		//llcall(caddrs[1]);
+		llcall(caddrs[1]);
 	}
 	sodown();
 }
