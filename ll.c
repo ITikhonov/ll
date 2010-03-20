@@ -104,7 +104,7 @@ void load() {
 				case '@': prefix='@'; nm=0; break;
 				default :
 					if(tc==':') {
-						if(tp=='L') {
+						if(tp!=':') {
 							cw=find(nm);
 							printf("def : %d ",cw); C1 C1 C1 C1 C1 C1 C1 C1; putchar('\n');
 							types[cw]='F'; lens[cw]=0; addrs[cw].f=realloc(addrs[cw].f,lens[cw]);

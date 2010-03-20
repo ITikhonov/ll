@@ -37,8 +37,8 @@ h3. Current goals
 *** -Display word definition.-
 *** -Separate display from input.-
 *** -Replace word under cursor when typing.-
-*** Operators parsing.
-*** Expand word if needed
+*** -Operators parsing.-
+*** Make compilation working.
 * JS interpreter.
 
 h3. Quick Reference
