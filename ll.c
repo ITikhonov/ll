@@ -84,11 +84,12 @@ void load() {
 		if(n<=0) break;
 		e=p+n;
 		while(p<e) {
+			int op=0;
 			if(*p>='a'&&*p<='z') {tc='L';}
 			else if((*p>='0'&&*p<='9')||(*p>='A'&&*p<='F')) {tc='N';}
-			else {tc=*p;}
+			else {tc=*p;op=1;}
 
-			if(tp!=tc){
+			if(tp!=tc||op){
 				switch(tp){
 				case 'N':
 					printf("N:%08lx\n",nm);
