@@ -88,10 +88,10 @@ Input:
 
 On transitions:
 
-1. LN LO LW NL NO NW OL ON OO OW - push first part into buffer and append buffer to current word.
-2. LS - push first part into buffer, create word from buffer and set it to current.
-3. LL - push first part into buffer.
-4. NN - push first part into buffer.
+1. LN LO LW NL NO NW OL ON OO OW - append buffer to current word.
+2. LS - create word from buffer and set it to current.
+3. LL - push current letter into buffer.
+4. NN - push current number into buffer.
 5. NS OS WS - syntax error.
 6. SS - cycle type of current word.
 7. WW WL WN WO SL SN SO SW - do nothing.
@@ -104,11 +104,11 @@ On key:
 * L: (1:NL OL)    (3:LL) (7:WL SL)
 	L -> (3)
 	WS -> (7)
-	-> (1)
+	-> (1,3)
 * N: (1:LN ON)    (4:NN) (7:WN SN)
 	N -> (4)
 	WS -> (7)
-	-> (1)
+	-> (1,4)
 	
 * O: (1:LO NO OO)        (7:WO SO)
 	WS -> (7)
