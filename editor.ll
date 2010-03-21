@@ -8,7 +8,7 @@ letter:4?,={,pushl.} 0?,={,pushl.} append pushl
 digit:2?,={,pushn.} 0?,={,pushn.} append pushn
 operator:0?,={,pushl.} append pushl
 colon:4?,={create.} 3?,={cycle.} syntax
-append:0?,={,.} 3?,={,.} 2?,={,buf>dot0buf<.} $Wchar,buf>print0buf<
+append:0?,={,.} 3?,={,.} 2?,={,buf>dot0buf<.} $Wchar,buf>"find dot print0buf<
 create:,,$Cchar
 pushl:buf>shlb or buf<
 pushn:hex buf>4shl or buf<
@@ -16,3 +16,5 @@ syntax:,,$Echar
 cycle:,,$Tchar
 print:rolb"char rolb"char rolb"char rolb"char rolb"char rolb"char rolb"char rolb"char,
 hex:$A?,_{$0-.}37-
+find:names search
+search:^^ > 0?,={,,,,0 1-.} ?,,={names-~,.}8+|search
