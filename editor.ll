@@ -4,13 +4,13 @@ type:$!?,_{,0.} $0?,_{,1.} $:?,_{,2.}={,3.} $A?,_{,1.} $[?,_{,2.} $a?,_{,1.} ${?
 prev:::00 00 00 00 00 00 00 00
 buf:::00 00 00 00 00 00 00 00
 current:::00 00 00 00 00 00 00 00
-space:0?,={.}append,
-letter:4?,={,pushl.} 0?,={,pushl.} append pushl
-digit:2?,={,pushn.} 0?,={,pushn.} append pushn
-operator:0?,={,pushl.} append pushl
+space:0?,={.}pop,
+letter:4?,={,pushl.} 0?,={,pushl.} pop pushl
+digit:2?,={,pushn.} 0?,={,pushn.} pop pushn
+operator:0?,={,pushl.} pop pushl
 colon:4?,={create.} 3?,={cycle.} syntax
-append:0?,={,.} 3?,={,.} 2?,={,buf>dot0buf<.} $Wchar,buf>"find dot print0buf<
-create:,,buf>find current< 0buf< current>dot
+pop:0?,={,.} 3?,={,.} 2?,={buf>$$append 0buf<.} $Wchar,buf>find 3shr 0append 0buf<
+create:,,buf>find ""current< addrs+0^>realloc~< 0~lens+< 0buf<
 pushl:buf>shlb or buf<
 pushn:hex buf>4shl or buf<
 syntax:,,$Echar$Rchar$Rchar
@@ -19,3 +19,4 @@ print:rolb"char rolb"char rolb"char rolb"char rolb"char rolb"char rolb"char rolb
 hex:$A?,_{$0-.}37-
 find:names search
 search:^^ > 0?,={,^<names-~,.} ?,,={names-~,.}8+|search
+append:current>" addrs+^lens+>9+^> realloc~< " lens+">~^9+~< ~addrs+>+ ~^<1+< @2,
