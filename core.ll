@@ -1,4 +1,4 @@
-main:@100,|main
+main:@100,
 char:@104,
 dot:@102,
 ?::48 39 06
@@ -24,3 +24,4 @@ addrs:@201
 lens:@202
 +::48 01 06 48 AD
 realloc:@204
+compile:@4,

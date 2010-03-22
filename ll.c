@@ -304,12 +304,15 @@ void soreload() {
 	if(!kick_so) printf("no kick in so\n");
 }
 
+int need_compile=0;
+
 uint64_t llkick(uint64_t f) {
 	switch(f){
 	//case 0: save(); return 0;
 	case 1: load(); return 0;
 	case 2: dump(); return 0;
 	case 3: soreload(); return 0;
+	case 4: need_compile=1; return 0;
 	default:
 		if(kick_so) return kick_so(f);
 	}
@@ -333,7 +336,10 @@ int main(int argc,char *argv[]) {
 	llsp--;
 
 	llcall(caddrs[0]);
-	llcall(caddrs[1]);
+	for(;;) {
+		if(need_compile) { compile(); need_compile=0; }
+		llcall(caddrs[1]);
+	}
 	sodown();
 	return 0;
 }
