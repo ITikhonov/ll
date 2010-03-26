@@ -77,7 +77,7 @@ void load() {
 	int f=open(savename,O_RDONLY);
 	if(f<0) return;
 	uint64_t nm=0;
-	int tp=' ',tc=0,cw=-1,prefix=0;
+	int tp=' ',tc=0,cw=-1;
 	for(;;) {
 		char buf[10240], *p=buf, *e;
 		int n=read(f,p,sizeof(buf));
@@ -103,7 +103,6 @@ void load() {
 				case ' ': case '\r': case '\n': case '\t': nm=0; break;
 				case '#':
 				case ':': nm=0; break;
-				case '|': prefix='|'; nm=0; break;
 				case '$': printf(" char %c %02x\n",*p,*p); append(cw,'$',*p); tc=' '; break;
 				default :
 					if(tc==':') {
@@ -116,14 +115,8 @@ void load() {
 					} else if(tc=='#') {
 						append(cw,'@',find(nm));
 					} else {
-						printf("prefix: %c %02x\n",prefix?prefix:' ',prefix);
-						if(prefix=='|') {
-							append(cw,'|',find(nm));
-						} else {
-							append(cw,'C',find(nm));
-						}
-						printf(" word: %c",prefix?prefix:' '); C1 C1 C1 C1 C1 C1 C1 C1; putchar('\n');
-						prefix=0;
+						append(cw,'C',find(nm));
+						printf(" word: "); C1 C1 C1 C1 C1 C1 C1 C1; putchar('\n');
 					}
 				}
 			}
@@ -197,13 +190,14 @@ void compile() {
 							*p++=0x48; *p++=0xb8;
 							*(uint64_t*)p=v; p+=8;
 						} else {
-							*p++=0xff; *p++=0x14; *p++=0x25;
+							if(l==0 || (l>0&&a[1].v==4&&a[1].t==0)) {
+								*p++=0xff; *p++=0x24; *p++=0x25;
+							} else {
+								*p++=0xff; *p++=0x14; *p++=0x25;
+							}
 							*(uint32_t*)p=(uint32_t)(uint64_t)(caddrs+v); p+=4;
 						}
 						break;
-					case '|':
-						*p++=0xff; *p++=0x24; *p++=0x25;
-						*(uint32_t*)p=(uint32_t)(uint64_t)(caddrs+v); p+=4; break;
 					case '$':
 					case '@':
 						memcpy(p,dup,7); p+=7;
@@ -334,6 +328,7 @@ int main(int argc,char *argv[]) {
 	find(*(uint64_t*)"tini\0\0\0");
 	find(*(uint64_t*)"niam\0\0\0");
 	find(0x7b); find(0x7d);
+	find(0x2e);
 	if(argc>1) { savename=argv[1]; }
 	load(); dump();
 	soreload();

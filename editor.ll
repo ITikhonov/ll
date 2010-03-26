@@ -18,5 +18,5 @@ cycle:,,$Tchar
 print:rolb"char rolb"char rolb"char rolb"char rolb"char rolb"char rolb"char rolb"char,
 hex:$A?,_{$0-.}37-
 find:names search
-search:^^ > 0?,={,^<names-~,.} ?,,={names-~,.}8+|search
+search:^^ > 0?,={,^<names-~,.} ?,,={names-~,.}8+search
 append:current>" addrs+^lens+>9+^> realloc~< " lens+">~^9+~< ~addrs+>+ ~^<1+<
