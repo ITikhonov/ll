@@ -138,7 +138,7 @@ void load() {
 				case 'I': types[cw]='D'; break;
 				case 'D': types[cw]='A'; break;
 				} break;
-			default : nm=tc<<8;
+			default : nm=tc;
 			}
 			p++; tp=tc;
 		}
@@ -241,14 +241,18 @@ void compile() {
 	printf("CODESIZE: %lu\n", p-comp);
 }
 
+void pc(char s) {
+	putchar(s?s:'_');
+}
+
 void dump() {
-#define C1 {nm<<=8;if(nm>>56)putchar(nm>>56);}
+#define C1 {char *v=((char*)&nm)+7; pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--); }
 	printf("\n=== dump ===\n");
 	int i;
 	for(i=0;i<512;i++) {
 		if(!addrs[i].v) continue;
 		uint64_t nm=names[i];
-		C1 C1 C1 C1 C1 C1 C1 C1
+		C1
 		printf(":(%c) ",types[i]);
 		switch(types[i]) {
 		case 'F': {
@@ -260,7 +264,7 @@ void dump() {
 					printf("@");
 				case 'C':
 					{ uint64_t nm=names[p->v];
-					C1 C1 C1 C1 C1 C1 C1 C1
+					C1
 					printf(" ");
 					} break;
 				default:
@@ -329,7 +333,7 @@ int main(int argc,char *argv[]) {
 
 	find(*(uint64_t*)"tini\0\0\0");
 	find(*(uint64_t*)"niam\0\0\0");
-	find(0x7b00); find(0x7d00);
+	find(0x7b); find(0x7d);
 	if(argc>1) { savename=argv[1]; }
 	load(); dump();
 	soreload();
@@ -339,7 +343,7 @@ int main(int argc,char *argv[]) {
 
 	llcall(caddrs[0]);
 	for(;;) {
-		if(need_compile) { compile(); need_compile=0; }
+		if(need_compile) { compile(); dump(); need_compile=0; }
 		llcall(caddrs[1]);
 	}
 	sodown();

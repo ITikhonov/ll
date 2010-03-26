@@ -19,7 +19,4 @@ print:rolb"char rolb"char rolb"char rolb"char rolb"char rolb"char rolb"char rolb
 hex:$A?,_{$0-.}37-
 find:names search
 search:^^ > 0?,={,^<names-~,.} ?,,={names-~,.}8+|search
-append:^^record current>" addrs+^lens+>9+^> realloc~< " lens+">~^9+~< ~addrs+>+ ~^<1+<
-recordc:0cmpb,={,$ }205#,
-recordw:rolb"recordc rolb"recordc rolb"recordc rolb"recordc rolb"recordc rolb"recordc rolb"recordc rolb"recordc,
-record:$C?,={recordc 3shl names+>recordw.}
+append:current>" addrs+^lens+>9+^> realloc~< " lens+">~^9+~< ~addrs+>+ ~^<1+<
