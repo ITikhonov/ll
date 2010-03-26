@@ -29,3 +29,4 @@ types:203#
 realloc:204#
 compile:4#,
 cmpb::3A 06
+storeb::8A 0E 88 08 48 AD 48 AD

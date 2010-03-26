@@ -36,8 +36,7 @@ int find(uint64_t w) {
 		if(!names[n]) {
 			//printf("f:alloc %lx %d\n",w,n);
 			names[n]=w;
-			types[n]='A'; addrs[n].v=malloc(lens[n]=1);
-			*addrs[n].v=0xc3;
+			types[n]='U'; addrs[n].v=0;
 			break;
 		}
 		if(names[n]==w) break;
@@ -153,13 +152,16 @@ uint8_t *caddrs[512];
 
 
 void compile() {
+	int undef=0;
 	static uint8_t dup[7]={0x48, 0x8d, 0x76, 0xf8, 0x48, 0x89, 0x06};
 	uint8_t *p=comp;
 	int i; for(i=0;i<512;i++) {
-		if(!addrs[i].f) continue;
+		if(!names[i]) continue;
 		uint8_t *backs[16], **backp=&backs[16];
 		printf("%s",(char*)(names+i)+1); 
 		switch(types[i]) {
+		case 'U':
+			undef++; break;
 		case 'A':
 			caddrs[i]=p; memcpy(p,addrs[i].v,lens[i]); p+=lens[i];
 			fdump(stdout,caddrs[i],lens[i]);
@@ -233,6 +235,7 @@ void compile() {
 		printf("\n");
 	}
 	printf("CODESIZE: %lu\n", p-comp);
+	if(undef) printf("UNDEFS!!: %u\n", undef);
 }
 
 void pc(char s) {
@@ -244,7 +247,7 @@ void dump() {
 	printf("\n=== dump ===\n");
 	int i;
 	for(i=0;i<512;i++) {
-		if(!addrs[i].v) continue;
+		if(!names[i]) continue;
 		uint64_t nm=names[i];
 		C1
 		printf(":(%c) ",types[i]);
@@ -327,7 +330,8 @@ int main(int argc,char *argv[]) {
 
 	find(*(uint64_t*)"tini\0\0\0");
 	find(*(uint64_t*)"niam\0\0\0");
-	find(0x7b); find(0x7d);
+	types[find(0x7b)]='S';
+	types[find(0x7d)]='S';
 	find(0x2e);
 	if(argc>1) { savename=argv[1]; }
 	load(); dump();

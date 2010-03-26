@@ -11,7 +11,7 @@ digit:2?,={,pushn.} 0?,={,pushn.} pop pushn
 operator:0?,={,pushl.} pop pushl
 colon:4?,={create.} 3?,={cycle.} syntax
 pop:0?,={,.} 3?,={,.} 2?,={,buf>$$append 0buf<.} ,buf>find3shr$Cappend 0buf<
-create:,,buf>find ""current< addrs+0^>realloc~< 0~lens+< 0buf<
+create:,,buf>find $F^3shr types+storeb ""current< addrs+0^>realloc~< 0~lens+< 0buf<
 pushl:buf>shlb or buf<
 pushn:hex buf>4shl or buf<
 syntax:,,$Echar$Rchar$Rchar
@@ -19,7 +19,7 @@ cycle:,,$Tchar
 print:rolb"char rolb"char rolb"char rolb"char rolb"char rolb"char rolb"char rolb"char,
 hex:$A?,_{$0-.}37-
 find:names search
-search:^^ > 0?,={,^<names-~,.} ?,,={names-~,.}8+search
+search:^^ > 0?,={,^<names-~, $U^3shr types+storeb.} ?,,={names-~,.}8+search
 append:current>" addrs+^lens+>9+^> realloc~< " lens+">~^9+~< ~addrs+>+ ~^<1+<
 read:206# "dot
 write:D?,={,A}205#,
