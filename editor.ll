@@ -23,4 +23,4 @@ search:^^ > 0?,={,^<names-~, $U^3shr types+storeb.} ?,,={names-~,.}8+search
 append:current>" addrs+^lens+>9+^> realloc~< " lens+">~^9+~< ~addrs+>+ ~^<1+<
 read:206# "dot
 write:D?,={,A}205#,
-load:read0?,={,$Dchar.}process load
+load:read0?,={,$Utypes5+storeb.}process load

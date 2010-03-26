@@ -333,6 +333,7 @@ int main(int argc,char *argv[]) {
 	types[find(0x7b)]='S';
 	types[find(0x7d)]='S';
 	find(0x2e);
+	find('e');
 	if(argc>1) { savename=argv[1]; }
 	load(); dump();
 	soreload();
@@ -342,7 +343,14 @@ int main(int argc,char *argv[]) {
 
 	llcall(caddrs[0]);
 	for(;;) {
-		if(need_compile) { compile(); dump(); need_compile=0; }
+		if(need_compile) {
+			compile(); dump(); need_compile=0;
+			if(types[5]=='F') {
+				llcall(caddrs[5]);
+				types[5]='U';
+			}
+			
+		}
 		llcall(caddrs[1]);
 	}
 	sodown();
