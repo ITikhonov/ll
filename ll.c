@@ -96,13 +96,13 @@ void load() {
 					if(types[cw]!='F') {
 						append8(cw,nm);
 					} else {
-						if(prefix=='@') { append(cw,'^',nm); prefix=0; }
+						if(tc=='#') { append(cw,'^',nm); } 
 						else { append(cw,'$',nm); }
 					}
 					nm=0; break;
 				case ' ': case '\r': case '\n': case '\t': nm=0; break;
+				case '#':
 				case ':': nm=0; break;
-				case '@': prefix='@'; nm=0; break;
 				case '|': prefix='|'; nm=0; break;
 				case '$': printf(" char %c %02x\n",*p,*p); append(cw,'$',*p); tc=' '; break;
 				default :
@@ -112,11 +112,12 @@ void load() {
 							printf("def : %d %lx ",cw,nm); C1 C1 C1 C1 C1 C1 C1 C1; putchar('\n');
 							types[cw]='F'; lens[cw]=0; addrs[cw].f=realloc(addrs[cw].f,lens[cw]);
 						}
+
+					} else if(tc=='#') {
+						append(cw,'@',find(nm));
 					} else {
 						printf("prefix: %c %02x\n",prefix?prefix:' ',prefix);
-						if(prefix=='@') {
-							append(cw,'@',find(nm));
-						} else if(prefix=='|') {
+						if(prefix=='|') {
 							append(cw,'|',find(nm));
 						} else {
 							append(cw,'C',find(nm));
@@ -130,6 +131,7 @@ void load() {
 			switch(tc) {
 			case 'L': nm<<=8; nm|=*p; break;
 			case 'N': nm<<=4; if(*p>='A') { nm|=*p-'A'+10; } else { nm|=*p-'0'; } break;
+			case '#': 
 			case ':':
 				if(tp==':') switch(types[cw]) {
 				case 'F': types[cw]='I'; break;

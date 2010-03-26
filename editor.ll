@@ -1,4 +1,4 @@
-init:@key@101,
+init:key#101#,
 key:"char prev> ^type"prev< 0?,={,space.} 1?,={,operator.} 2?,={,digit.} 3?,={,colon.} ,letter
 type:$!?,_{,0.} $0?,_{,1.} $:?,_{,2.}={,3.} $A?,_{,1.} $[?,_{,2.} $a?,_{,1.} ${?,_{,4.} ,1
 prev:::00 00 00 00 00 00 00 00
@@ -20,6 +20,6 @@ hex:$A?,_{$0-.}37-
 find:names search
 search:^^ > 0?,={,^<names-~,.} ?,,={names-~,.}8+|search
 append:^^record current>" addrs+^lens+>9+^> realloc~< " lens+">~^9+~< ~addrs+>+ ~^<1+<
-recordc:0cmpb,={,$ }@205,
+recordc:0cmpb,={,$ }205#,
 recordw:rolb"recordc rolb"recordc rolb"recordc rolb"recordc rolb"recordc rolb"recordc rolb"recordc rolb"recordc,
 record:$C?,={recordc 3shl names+>recordw.}
