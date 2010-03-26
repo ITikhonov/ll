@@ -48,7 +48,7 @@ void init() {
 	//ioctl(0,KDGKBMODE,&oldkbmode);
 	//ioctl(0,KDSKBMODE,K_MEDIUMRAW);
 
-	history=open("changes",O_WRONLY|O_APPEND|O_CREAT,0644);
+	history=open("changes",O_RDWR|O_CREAT,0644);
 	stack();
 }
 
@@ -88,6 +88,7 @@ uint64_t kick(uint64_t f) {
 	case 0x203: return (uint64_t)types;
 	case 0x204: { void *p=(void*)(*llsp++); return (uint64_t)realloc(p,*llsp++); }
 	case 0x205: write(history,llsp,1); llsp++; break;
+	case 0x206: { uint8_t c=0; read(history,&c,1); return c;}
 	}
 	return 0;
 }
