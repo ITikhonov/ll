@@ -40,42 +40,27 @@ h3. Current goals
 *** -Operators parsing.-
 *** -Make compilation working.-
 *** -{} put offset only, rest is compiled via inlines.-
-*** Port word displaying to new dialect.
+*** Save.
 * JS interpreter.
 
 h3. Quick Reference
 
-All numbers in hex, 7 significant digits (start with zero if the first digit is a letter): @0deadbee@ @08@ @78@.
+Consecutive lower case letters (a-z) describe word, digits and uppercase describe hex number (0-9A-F).
+Colon is a special character, it must immediatelly follow word and means that following is a definition
+of this word. Single colon defines ordinary word, two colons define inline code word, three colons
+define data word, four colons define code word. Other characters (+-., etc) describe single character
+word. Spaces are ignored (except of before colon).
 
-Everything starting with letters is word call: @word@ @hello@ @init@ @main@.
+h3. History
 
-If word is prepended with dot it's a jump not call: @.recursive@ @.goaway@.
-
-If number prepended with '^' it is a C call to kick.c: @^101@.
-
-if word is prepended with single quote it will push word index in dictionary on stack: @'key@.
-
-Special symbol @?@ checks ZF flag and jump if not zero to next @:@ symbol: @shl8 ? zero : notzero@. Note
-that in case of zero both zero and nonzero will be executed (it is not if...else it's just if {}).
-
-h3. Word types
-
-*F* is a forth word.
-
-*A* is a machine code.
-
-*I* is a machine code which will be inlined.
-
-*D* is a data word, on execution pointer to content will be pushed on stack.
-
-*T* is a temporary data word, instead of data size is specified.
+Loading
 
 h3. Editor (new)
 
 Actions:
 
 * Create word (on colon).
-* Cycle type (on consequent colons).
+* Cycle type (on consecuent colons).
 * Append to definition (on lexical boundary).
 
 Input:

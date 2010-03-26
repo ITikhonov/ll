@@ -25,3 +25,4 @@ lens:@202
 +::48 01 06 48 AD
 realloc:@204
 compile:@4,
+cmpb::3A 06

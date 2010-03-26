@@ -119,7 +119,7 @@ void load() {
 						} else if(prefix=='|') {
 							append(cw,'|',find(nm));
 						} else {
-							append(cw,0,find(nm));
+							append(cw,'C',find(nm));
 						}
 						printf(" word: %c",prefix?prefix:' '); C1 C1 C1 C1 C1 C1 C1 C1; putchar('\n');
 						prefix=0;
@@ -180,7 +180,7 @@ void compile() {
 					if(c&&c!='@') { fprintf(stdout," %c%lx",c,v); }
 					else { fprintf(stdout," %.1s%.7s",(c?((char*)&c):""),((char*)(names+v))); }
 					switch(c) {
-					case 0:
+					case 'C':
 						if(v==2) { // '{'
 							*(--backp)=p;
 							*p++=0x00; *p++=0x00; *p++=0x00; *p++=0x00; break;
@@ -256,7 +256,7 @@ void dump() {
 				switch(p->t) {
 				case '@':
 					printf("@");
-				case 0:
+				case 'C':
 					{ uint64_t nm=names[p->v];
 					C1 C1 C1 C1 C1 C1 C1 C1
 					printf(" ");
