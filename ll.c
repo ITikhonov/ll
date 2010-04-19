@@ -15,7 +15,7 @@ extern void llvm();
 
 char *savename="state.ll";
 
-struct fcode { uint8_t t; uint64_t v; } __attribute__((__packed__));
+struct fcode { uint16_t n; } __attribute__((__packed__));
 union faddr {
 	uint8_t *v;
 	struct fcode *f;
@@ -53,13 +53,12 @@ void fdump(FILE *f, uint8_t *a, int l) {
 	}
 }
 
-static void append(int cw, uint8_t t, uint64_t v) {
+static void append(int cw, uint16_t n) {
 	int nlen=lens[cw]+sizeof(struct fcode);
 	addrs[cw].f=realloc(addrs[cw].f,nlen);
 	union faddr c;
 	c.v=addrs[cw].v+lens[cw];
-	c.f->t=t;
-	c.f->v=v;
+	c.f->n=n;
 	lens[cw]=nlen;
 }
 
@@ -70,74 +69,60 @@ static void append8(int cw, uint8_t v) {
 	lens[cw]=nlen;
 }
 
+int unhex(char x) {
+	if(x<'A') {return x-'0';}
+	else {return (x-'A')+10;}
+}
+
+void dump();
+
+
+void pc(char s) { putchar(s?s:'_'); }
 
 void load() {
-#define C1 {nm<<=8;if(nm>>56)putchar(nm>>56);}
+#define C1 {char *v=((char*)&nm)+7; pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--); }
 	int f=open(savename,O_RDONLY);
 	if(f<0) return;
-	uint64_t nm=0;
+	uint64_t nm=' ';
 	int tp=' ',tc=0,cw=-1;
 	for(;;) {
 		char buf[10240], *p=buf, *e;
 		int n=read(f,p,sizeof(buf));
 		if(n<=0) break;
 		e=p+n;
-		while(p<e) {
-			int op=0;
-			if(*p>='a'&&*p<='z') {tc='L';}
-			else if((*p>='0'&&*p<='9')||(*p>='A'&&*p<='F')) {tc='N';}
-			else {tc=*p;op=1;}
-
-			if(tp!=tc||op){
-				switch(tp){
-				case 'N':
-					printf("N:%08lx\n",nm);
-					if(types[cw]!='F') {
-						append8(cw,nm);
-					} else {
-						if(tc=='#') { append(cw,'^',nm); } 
-						else { append(cw,'$',nm); }
-					}
-					nm=0; break;
-				case ' ': case '\r': case '\n': case '\t': nm=0; break;
-				case '#':
-				case ':': nm=0; break;
-				case '$': printf(" char %c %02x\n",*p,*p); append(cw,'$',*p); tc=' '; break;
-				default :
-					if(tc==':') {
-						if(tp!=':') {
-							cw=find(nm);
-							printf("def : %d %lx ",cw,nm); C1 C1 C1 C1 C1 C1 C1 C1; putchar('\n');
-							types[cw]='F'; lens[cw]=0; addrs[cw].f=realloc(addrs[cw].f,lens[cw]);
-						}
-
-					} else if(tc=='#') {
-						append(cw,'@',find(nm));
-					} else {
-						append(cw,'C',find(nm));
-						printf(" word: "); C1 C1 C1 C1 C1 C1 C1 C1; putchar('\n');
+		for(;p<e;p++) {
+			if(*p==':') {
+				if(tp!=':') {
+					cw=find(nm); types[cw]='F'; nm=' '; tp=':';
+				} else {
+					switch(types[cw]) {
+					case 'F': types[cw]='I'; break;
+					case 'I': types[cw]='D'; break;
+					case 'D': types[cw]='A'; break;
 					}
 				}
+				continue;
 			}
 
-			switch(tc) {
-			case 'L': nm<<=8; nm|=*p; break;
-			case 'N': nm<<=4; if(*p>='A') { nm|=*p-'A'+10; } else { nm|=*p-'0'; } break;
-			case '#': 
-			case ':':
-				if(tp==':') switch(types[cw]) {
-				case 'F': types[cw]='I'; break;
-				case 'I': types[cw]='D'; break;
-				case 'D': types[cw]='A'; break;
-				} break;
-			default : nm=tc;
-			}
-			p++; tp=tc;
+			if(*p>='a'&&*p<='z') {tc='L';}
+			else if((*p>='0'&&*p<='9')||(*p>='A'&&*p<='F')) {tc='N';}
+			else if(*p==' '||*p=='\n') {tc=' ';}
+			else { tc='O'; }
+
+			if(tp=='O'||tc!=tp) {
+				if(tp!=' '&&tp!=':') {
+					if(types[cw]=='F') { append(cw,find(nm)); }
+					else { append8(cw,unhex(nm)|(unhex(nm>>8)<<4)); }
+				}
+				nm=*p;
+			} else { nm=(nm<<8)|*p; }
+			tp=tc;
 		}
 		
 	}
 	close(f);
-	//exit(0);
+	dump();
+	exit(0);
 	return;
 #undef C1
 }
@@ -150,6 +135,7 @@ int namecmp(const void *a, const void *b) {
 uint8_t comp[65535];
 uint8_t *caddrs[512];
 
+#if 0
 
 void compile() {
 	int undef=0;
@@ -238,9 +224,8 @@ void compile() {
 	if(undef) printf("UNDEFS!!: %u\n", undef);
 }
 
-void pc(char s) {
-	putchar(s?s:'_');
-}
+#endif
+
 
 void dump() {
 #define C1 {char *v=((char*)&nm)+7; pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--); }
@@ -250,23 +235,15 @@ void dump() {
 		if(!names[i]) continue;
 		uint64_t nm=names[i];
 		C1
-		printf(":(%c) ",types[i]);
+		printf(":(%c%u) ",types[i],i);
 		switch(types[i]) {
 		case 'F': {
 			struct fcode *p=addrs[i].f;
 			struct fcode *e=(struct fcode*)(addrs[i].v+lens[i]);
 			for(;p<e;p++) {
-				switch(p->t) {
-				case '@':
-					printf("@");
-				case 'C':
-					{ uint64_t nm=names[p->v];
-					C1
-					printf(" ");
-					} break;
-				default:
-					printf("%c%lx ",p->t,p->v);
-				}
+				uint64_t nm=names[p->n];
+				C1
+				printf("[%x] ",p->n);
 			}
 		} break;
 		case 'I':
@@ -281,6 +258,9 @@ void dump() {
 	printf("%ld\n",*llsp);
 #undef C1
 }
+
+void compile() {}
+
 
 void *dl=0;
 uint64_t (*kick_so)(uint64_t f)=0;
