@@ -75,6 +75,9 @@ static void wait() {
 	}
 }
 
+void sdl_init();
+void sdl_poll();
+
 uint64_t kick(uint64_t f) {
 	switch(f) {
 	case 0x100: wait(); break;
@@ -82,6 +85,7 @@ uint64_t kick(uint64_t f) {
 	case 0x102: printf("%lx ", *llsp++); fflush(stdout); break;
 	case 0x103: stack(); break;
 	case 0x104: if(*llsp) putchar(*llsp); llsp++; fflush(stdout); break;
+
 	case 0x200: return (uint64_t)names;
 	case 0x201: return (uint64_t)addrs;
 	case 0x202: return (uint64_t)lens;
@@ -89,6 +93,9 @@ uint64_t kick(uint64_t f) {
 	case 0x204: { void *p=(void*)(*llsp++); return (uint64_t)realloc(p,*llsp++); }
 	case 0x205: write(history,llsp,1); llsp++; break;
 	case 0x206: { uint8_t c=0; read(history,&c,1); return c;}
+
+	case 0x300: sdl_init(); break;
+	case 0x301: sdl_poll(); break;
 	}
 	return 0;
 }

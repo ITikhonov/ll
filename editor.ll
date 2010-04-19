@@ -1,4 +1,4 @@
-init:load 2#, key#101#,
+init:load 2#, key#101#, 300#,
 key:"char"write process
 process:prev> ^type"prev< 0?,={,space.} 1?,={,operator.} 2?,={,digit.} 3?,={,colon.} ,letter
 type:$!?,_{,0.} $0?,_{,1.} $:?,_{,2.}={,3.} $A?,_{,1.} $[?,_{,2.} $a?,_{,1.} ${?,_{,4.} ,1
