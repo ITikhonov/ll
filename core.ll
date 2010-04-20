@@ -1,4 +1,4 @@
-main:301#,100#,
+main:100#,
 char:104#,
 dot:102#,
 ?::48 39 06
@@ -30,3 +30,6 @@ realloc:204#
 compile:4#,
 cmpb::3A 06
 storeb::8A 0E 88 08 48 AD 48 AD
+init:key#101#,
+key:"char
+digits: 12345678 ABCDEF00ABCDEF00 ABCD ABCDEF00ABCDEF

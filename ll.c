@@ -28,7 +28,7 @@ char types[512];
 
 uint64_t llkick(uint64_t f);
 
-void pc(char s) { putchar(s?s:'_'); }
+void pc(char s) { if(s) putchar(s?s:'_'); }
 
 void print_nm(uint64_t nm) {
 	char *v=((char*)&nm)+7; pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);
@@ -52,7 +52,7 @@ int find(uint64_t w, uint64_t pre) {
 	printf("\n");
 	for(n=0;n<512-(pre?1:0);n++) {
 		if(!names[n]) {
-			if(pre) { names[n]=pre; names[n+1]=w; }
+			if(pre) { names[n]=pre; names[n+1]=w; types[n+1]='.'; }
 			else { names[n]=w; }
 			types[n]='U'; addrs[n].v=0;
 			break;
@@ -90,7 +90,7 @@ static void append8(int cw, uint8_t v) {
 	lens[cw]=nlen;
 }
 
-int unhex(char x) {
+uint64_t unhex(char x) {
 	if(x<'A') {return x-'0';}
 	else {return (x-'A')+10;}
 }
@@ -111,9 +111,13 @@ void load() {
 		if(n<=0) break;
 		e=p+n;
 		for(;p<e;p++) {
+			if(nm=='$') {
+				append(cw,find((nm<<8)|*p,0)); nm=' '; tp=' ';
+				continue;
+			}
+
 			if(*p==':') {
 				if(tp!=':') {
-					printf(": ");
 					cw=find(nm,pre); types[cw]='F'; nm=' '; pre=0; tp=':';
 				} else {
 					switch(types[cw]) {
@@ -124,6 +128,7 @@ void load() {
 				}
 				continue;
 			}
+
 
 			if(*p>='a'&&*p<='z') {tc='L';}
 			else if((*p>='0'&&*p<='9')||(*p>='A'&&*p<='F')) {tc='N';}
@@ -146,7 +151,6 @@ void load() {
 	}
 	close(f);
 	dump();
-	exit(0);
 	return;
 #undef C1
 }
@@ -159,16 +163,49 @@ int namecmp(const void *a, const void *b) {
 uint8_t comp[65535];
 uint8_t *caddrs[512];
 
-#if 0
+
+uint64_t make_num(int n) {
+	uint64_t nm=names[n];
+	uint64_t w=0;
+	int i;
+
+	for(i=0;i<32&&nm;i+=4) { w|=unhex(nm&0xff)<<i; nm>>=8; }
+	if(i==32) {
+		uint64_t pre=w; w=0; nm=names[n+1];
+		for(i=0;i<32&&nm;i+=4) { w|=unhex(nm&0xff)<<i; nm>>=8; }
+		w|=pre<<i;
+	}
+	return w;
+}
+
+
+#if 1
+static uint8_t dup_code[7]={0x48, 0x8d, 0x76, 0xf8, 0x48, 0x89, 0x06};
+
+uint8_t *compile_kick(uint8_t *p, uint64_t n) {
+	memcpy(p,dup_code,7); p+=7;
+	// mov    %rsi,llsp
+	*p++=0x48; *p++=0x89; *p++=0x34; *p++=0x25;
+	*(uint32_t*)p=(uint32_t)(uint64_t)(&llsp); p+=4;
+	// movq $x,%rdi
+	*p++=0x48; *p++=0xc7; *p++=0xc7;
+	*(uint32_t*)p=(uint32_t)n; p+=4;
+	// call llkick
+	*p++=0xe8;
+	*(uint32_t*)p=(uint32_t)(uint64_t)((uint8_t*)llkick-(p+4)); p+=4;
+	// movq $llsp,%rsi
+	*p++=0x48; *p++=0x8b; *p++=0x34; *p++=0x25;
+	*(uint32_t*)p=(uint32_t)(uint64_t)(&llsp); p+=4;
+	return p;
+}
 
 void compile() {
 	int undef=0;
-	static uint8_t dup[7]={0x48, 0x8d, 0x76, 0xf8, 0x48, 0x89, 0x06};
 	uint8_t *p=comp;
 	int i; for(i=0;i<512;i++) {
 		if(!names[i]) continue;
 		uint8_t *backs[16], **backp=&backs[16];
-		printf("%s",(char*)(names+i)+1); 
+		printf("COMPILE:"); print_name(i); printf("\n");
 		switch(types[i]) {
 		case 'U':
 			undef++; break;
@@ -183,54 +220,68 @@ void compile() {
 				int l=lens[i]/sizeof(struct fcode);
 				while(l--) {
 					uint8_t *st=p;
-					uint64_t v=a->v; uint8_t c=a->t;
-					if(c&&c!='@') { fprintf(stdout," %c%lx",c,v); }
-					else { fprintf(stdout," %.1s%.7s",(c?((char*)&c):""),((char*)(names+v))); }
+					uint64_t v=a->n;
+
+					print_name(a->n);
+					uint64_t nm=names[a->n];
+					char c=nm&0xff;
+					if((nm>>8)=='$') { c='$'; v=nm&0xff; }
 					switch(c) {
-					case 'C':
-						if(v==2) { // '{'
+					case '0' ... '9':
+					case 'A' ... 'F':
+						v=make_num(a->n);
+						if(l&&names[(a+1)->n]=='#') {
+							printf("KICK %lx\n",v);
+							p=compile_kick(p,v);
+							a++; l--;
+							break;
+						} else {
+							printf("NUMR %lx\n",v);
+						}
+
+					case '$':
+						memcpy(p,dup_code,7); p+=7;
+						*p++=0x48; *p++=0xb8;
+						*(uint64_t*)p=v; p+=8;
+						break;
+
+					default:
+						if(l&&names[(a+1)->n]=='#') {
+							printf("QUOT %lx\n",v);
+							memcpy(p,dup_code,7); p+=7;
+							*p++=0x48; *p++=0xb8;
+							*(uint64_t*)p=v; p+=8;
+							a++; l--;
+							break;
+						}
+
+						if(c=='{') {
 							*(--backp)=p;
 							*p++=0x00; *p++=0x00; *p++=0x00; *p++=0x00; break;
-						} else if(v==3) { // '}'
+						} else if(c=='}') {
 							*(uint32_t*)(*backp)=p-(*backp+4); backp++; break;
 						} else if(types[v]=='I') { 
+							printf("INLI");
 							memcpy(p,addrs[v].v,lens[v]); p+=lens[v];
 						} else if(types[v]=='D'||types[v]=='T') { 
 							printf("\ndata word!\n");
 							v=(uint64_t)(addrs[v].v);
-							memcpy(p,dup,7); p+=7;
+							memcpy(p,dup_code,7); p+=7;
 							*p++=0x48; *p++=0xb8;
 							*(uint64_t*)p=v; p+=8;
 						} else {
-							if(l==0 || (l>0&&a[1].v==4&&a[1].t==0)) {
+							if(l==0 || (l>0&&a[1].n==4)) {
+								printf("JUMP %lx\n",v);
 								*p++=0xff; *p++=0x24; *p++=0x25;
 							} else {
+								printf("CALL %lx\n",v);
 								*p++=0xff; *p++=0x14; *p++=0x25;
 							}
 							*(uint32_t*)p=(uint32_t)(uint64_t)(caddrs+v); p+=4;
 						}
 						break;
-					case '$':
-					case '@':
-						memcpy(p,dup,7); p+=7;
-						*p++=0x48; *p++=0xb8;
-						*(uint64_t*)p=v; p+=8;
-						break;
-					case '^':
-						memcpy(p,dup,7); p+=7;
-						// mov    %rsi,llsp
-						*p++=0x48; *p++=0x89; *p++=0x34; *p++=0x25;
-						*(uint32_t*)p=(uint32_t)(uint64_t)(&llsp); p+=4;
-						// movq $x,%rdi
-						*p++=0x48; *p++=0xc7; *p++=0xc7;
-						*(uint32_t*)p=(uint32_t)v; p+=4;
-						// call llkick
-						*p++=0xe8;
-						*(uint32_t*)p=(uint32_t)(uint64_t)((uint8_t*)llkick-(p+4)); p+=4;
-						// movq $llsp,%rsi
-						*p++=0x48; *p++=0x8b; *p++=0x34; *p++=0x25;
-						*(uint32_t*)p=(uint32_t)(uint64_t)(&llsp); p+=4;
-						break;
+
+
 					}
 					fdump(stdout,st,p-st);
 					printf("\n");
@@ -242,12 +293,11 @@ void compile() {
 		}
 		printf("total: ");
 		if(caddrs[i]) fdump(stdout,caddrs[i],p-caddrs[i]);
-		printf("\n");
+		printf("\n\n");
 	}
 	printf("CODESIZE: %lu\n", p-comp);
 	if(undef) printf("UNDEFS!!: %u\n", undef);
 }
-
 #endif
 
 void dump() {
@@ -281,8 +331,6 @@ void dump() {
 	printf("%ld\n",*llsp);
 #undef C1
 }
-
-void compile() {}
 
 
 void *dl=0;

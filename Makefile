@@ -12,7 +12,7 @@ kick.so: kick.o opengl.o
 	$(CC) -shared -nostartfiles -o kick.so kick.o opengl.o
 
 state.ll: core.ll editor.ll
-	cat core.ll editor.ll > state.ll
+	cat core.ll > state.ll
 
 opengl.o: font.h
 
