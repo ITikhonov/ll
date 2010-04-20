@@ -24,3 +24,6 @@ append:current>" addrs+^lens+>9+^> realloc~< " lens+">~^9+~< ~addrs+>+ ~^<1+<
 read:206# "dot
 write:D?,={,A}205#,
 load:read0?,={,$Utypes5+storeb.}process load
+realyrealylong:"1234567890123"realyrealylong
+realyrea:"12345678"realyrea
+realyrealylonga:"1234567890123"realyrealylong"realyrealylonga

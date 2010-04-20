@@ -28,21 +28,42 @@ char types[512];
 
 uint64_t llkick(uint64_t f);
 
-int find(uint64_t w) {
-	//printf("f:====\n");
+void pc(char s) { putchar(s?s:'_'); }
+
+void print_nm(uint64_t nm) {
+	char *v=((char*)&nm)+7; pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);
+}
+
+void print_name(int n) {
+	uint64_t nm=names[n];
+	print_nm(nm);
+	if(nm>>56) {
+		nm=names[n+1];
+		print_nm(nm);
+	}
+}
+
+
+int find(uint64_t w, uint64_t pre) {
 	int n;
-	for(n=0;n<512;n++) {
-		//printf("f:%d(%p) %08lx %08lx\n",n,addrs[n].v,w,names[n]);
+	printf("==== ");
+	print_nm(pre);
+	print_nm(w);
+	printf("\n");
+	for(n=0;n<512-(pre?1:0);n++) {
 		if(!names[n]) {
-			//printf("f:alloc %lx %d\n",w,n);
-			names[n]=w;
+			if(pre) { names[n]=pre; names[n+1]=w; }
+			else { names[n]=w; }
 			types[n]='U'; addrs[n].v=0;
 			break;
 		}
-		if(names[n]==w) break;
-	}
 
-	//printf("f:ret %d\n",n);
+
+		if(pre) { if(names[n]==pre&&names[n+1]==w) break; }
+		else { if(names[n]==w) break; }
+
+		if((names[n]>>56)) n++;
+	}
 	return n;
 }
 
@@ -77,13 +98,12 @@ int unhex(char x) {
 void dump();
 
 
-void pc(char s) { putchar(s?s:'_'); }
 
 void load() {
 #define C1 {char *v=((char*)&nm)+7; pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--); }
 	int f=open(savename,O_RDONLY);
 	if(f<0) return;
-	uint64_t nm=' ';
+	uint64_t nm=' ',pre=0;
 	int tp=' ',tc=0,cw=-1;
 	for(;;) {
 		char buf[10240], *p=buf, *e;
@@ -93,7 +113,8 @@ void load() {
 		for(;p<e;p++) {
 			if(*p==':') {
 				if(tp!=':') {
-					cw=find(nm); types[cw]='F'; nm=' '; tp=':';
+					printf(": ");
+					cw=find(nm,pre); types[cw]='F'; nm=' '; pre=0; tp=':';
 				} else {
 					switch(types[cw]) {
 					case 'F': types[cw]='I'; break;
@@ -111,11 +132,14 @@ void load() {
 
 			if(tp=='O'||tc!=tp) {
 				if(tp!=' '&&tp!=':') {
-					if(types[cw]=='F') { append(cw,find(nm)); }
+					if(types[cw]=='F') { append(cw,find(nm,pre)); }
 					else { append8(cw,unhex(nm)|(unhex(nm>>8)<<4)); }
 				}
-				nm=*p;
-			} else { nm=(nm<<8)|*p; }
+				nm=*p; pre=0;
+			} else {
+				nm=(nm<<8)|*p;
+				if(!pre&&(nm>>56)&0xff) { pre=nm; nm=0; }
+			}
 			tp=tc;
 		}
 		
@@ -226,7 +250,6 @@ void compile() {
 
 #endif
 
-
 void dump() {
 #define C1 {char *v=((char*)&nm)+7; pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--); }
 	printf("\n=== dump ===\n");
@@ -234,15 +257,14 @@ void dump() {
 	for(i=0;i<512;i++) {
 		if(!names[i]) continue;
 		uint64_t nm=names[i];
-		C1
-		printf(":(%c%u) ",types[i],i);
+		print_name(i);
+		printf(":(%c%x) ",types[i],i);
 		switch(types[i]) {
 		case 'F': {
 			struct fcode *p=addrs[i].f;
 			struct fcode *e=(struct fcode*)(addrs[i].v+lens[i]);
 			for(;p<e;p++) {
-				uint64_t nm=names[p->n];
-				C1
+				print_name(p->n);
 				printf("[%x] ",p->n);
 			}
 		} break;
@@ -254,6 +276,7 @@ void dump() {
 		default:;
 		}
 		printf("\n");
+		if(nm>>56) i++;
 	}
 	printf("%ld\n",*llsp);
 #undef C1
@@ -308,12 +331,12 @@ int main(int argc,char *argv[]) {
 	memset(lens,0,sizeof(lens));
 	memset(types,0,sizeof(types));
 
-	find(*(uint64_t*)"tini\0\0\0");
-	find(*(uint64_t*)"niam\0\0\0");
-	types[find(0x7b)]='S';
-	types[find(0x7d)]='S';
-	find(0x2e);
-	find('e');
+	find(*(uint64_t*)"tini\0\0\0",0);
+	find(*(uint64_t*)"niam\0\0\0",0);
+	types[find(0x7b,0)]='S';
+	types[find(0x7d,0)]='S';
+	find(0x2e,0);
+	find('e',0);
 	if(argc>1) { savename=argv[1]; }
 	load(); dump();
 	soreload();
