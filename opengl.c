@@ -15,16 +15,15 @@ void sdl_poll() {
 	    switch(event.type) {
 		case SDL_KEYDOWN:
 			SDL_Quit();
+#ifndef TEST
+			down();
+#endif
+			exit(0);
 		default:
 		    break;
 	    }
     }
 
-    SDL_Rect r={8,0,8,8};
-
-    SDL_FillRect(surface,0,0xffffff);
-    SDL_BlitSurface(fontsf,&r,surface,0);
-    SDL_Flip(surface);
     return;
 }
 
@@ -50,13 +49,25 @@ void sdl_init()
     fontsf=SDL_CreateRGBSurfaceFrom(font,fontw,8,8,fontw,0,0,0,0);
     SDL_SetColors(fontsf,&b,0,1);
     SDL_SetColors(fontsf,&w,255,1);
-    printf("%p %p\n",surface,fontsf);
+}
+
+void sdl_clear() {
+    SDL_FillRect(surface,0,0xffffff);
+}
+
+void sdl_char(int c, int x, int y) {
+    SDL_Rect s={c*8,0,8,8};
+    SDL_Rect d={x,y,8,8};
+    SDL_BlitSurface(fontsf,&s,surface,&d);
+    SDL_Flip(surface);
 }
 
 #ifdef TEST
 
 int main() {
 	sdl_init();
+	sdl_clear();
+	sdl_char(10,100,100);
 	for(;;) { sdl_poll(); }
 }
 

@@ -77,6 +77,9 @@ static void wait() {
 
 void sdl_init();
 void sdl_poll();
+void sdl_clear();
+void sdl_char(int c, int x, int y);
+
 
 uint64_t kick(uint64_t f) {
 	switch(f) {
@@ -96,6 +99,12 @@ uint64_t kick(uint64_t f) {
 
 	case 0x300: sdl_init(); break;
 	case 0x301: sdl_poll(); break;
+	case 0x302: sdl_clear(); break;
+	case 0x303: {
+			int c=*llsp++;
+			int p=*llsp++;
+			sdl_char(c,p&0xffff,p>>16); break;
+		}; break;
 	}
 	return 0;
 }
