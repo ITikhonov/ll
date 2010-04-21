@@ -28,7 +28,43 @@ char types[512];
 
 uint64_t llkick(uint64_t f);
 
-void pc(char s) { if(s) putchar(s?s:'_'); }
+
+// """abcdefghijklmnopqrstuvwxyz0123456789ABCDEF.,"^~?=_{}:@"""
+int fromascii(char c) {
+	switch(c){
+	case 'a' ... 'z': return (c-'a')+1;
+	case '0' ... '9': return (c-'0')+27;
+	case 'A' ... 'F': return (c-'A')+37;
+	case '.': return 43;
+	case ',': return 44;
+	case '"': return 45;
+	case '^': return 46;
+	case '~': return 47;
+	case '?': return 48;
+	case '=': return 49;
+	case '_': return 50;
+	case '{': return 51;
+	case '}': return 52;
+	case ':': return 53;
+	case '@': return 54;
+	case '#': return 55;
+	case '<': return 56;
+	case '>': return 57;
+	case '+': return 58;
+	case '-': return 59;
+	case ' ':
+	case '\n': return 0;
+	default:
+		printf("\n!!! unknown symbol %u (%c)\n",c,c);
+		abort();
+	}
+}
+
+char fromintr(uint8_t c) {
+	return " abcdefghijklmnopqrstuvwxyz0123456789ABCDEF.,\"^~?=_{}:@#<>+-"[c];
+}
+
+void pc(char s) { if(s) putchar(s?fromintr(s):'_'); }
 
 void print_nm(uint64_t nm) {
 	char *v=((char*)&nm)+7; pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);
@@ -90,9 +126,8 @@ static void append8(int cw, uint8_t v) {
 	lens[cw]=nlen;
 }
 
-uint64_t unhex(char x) {
-	if(x<'A') {return x-'0';}
-	else {return (x-'A')+10;}
+uint64_t unhex(uint8_t x) {
+	return x-27;
 }
 
 void dump();
@@ -111,11 +146,6 @@ void load() {
 		if(n<=0) break;
 		e=p+n;
 		for(;p<e;p++) {
-			if(nm=='$') {
-				append(cw,find((nm<<8)|*p,0)); nm=' '; tp=' ';
-				continue;
-			}
-
 			if(*p==':') {
 				if(tp!=':') {
 					cw=find(nm,pre); types[cw]='F'; nm=' '; pre=0; tp=':';
@@ -140,9 +170,9 @@ void load() {
 					if(types[cw]=='F') { append(cw,find(nm,pre)); }
 					else { append8(cw,unhex(nm)|(unhex(nm>>8)<<4)); }
 				}
-				nm=*p; pre=0;
+				nm=fromascii(*p); pre=0;
 			} else {
-				nm=(nm<<8)|*p;
+				nm=(nm<<8)|fromascii(*p);
 				if(!pre&&(nm>>56)&0xff) { pre=nm; nm=0; }
 			}
 			tp=tc;
@@ -225,12 +255,10 @@ void compile() {
 					print_name(a->n);
 					uint64_t nm=names[a->n];
 					char c=nm&0xff;
-					if((nm>>8)=='$') { c='$'; v=nm&0xff; }
 					switch(c) {
-					case '0' ... '9':
-					case 'A' ... 'F':
+					case 27 ... 42:
 						v=make_num(a->n);
-						if(l&&names[(a+1)->n]=='#') {
+						if(l&&names[(a+1)->n]==55) { // '#'
 							printf("KICK %lx\n",v);
 							p=compile_kick(p,v);
 							a++; l--;
@@ -239,14 +267,13 @@ void compile() {
 							printf("NUMR %lx\n",v);
 						}
 
-					case '$':
 						memcpy(p,dup_code,7); p+=7;
 						*p++=0x48; *p++=0xb8;
 						*(uint64_t*)p=v; p+=8;
 						break;
 
 					default:
-						if(l&&names[(a+1)->n]=='#') {
+						if(l&&names[(a+1)->n]==55) { // '#'
 							printf("QUOT %lx\n",v);
 							memcpy(p,dup_code,7); p+=7;
 							*p++=0x48; *p++=0xb8;
@@ -255,10 +282,10 @@ void compile() {
 							break;
 						}
 
-						if(c=='{') {
+						if(c==51) { // '{'
 							*(--backp)=p;
 							*p++=0x00; *p++=0x00; *p++=0x00; *p++=0x00; break;
-						} else if(c=='}') {
+						} else if(c==52) { // '}'
 							*(uint32_t*)(*backp)=p-(*backp+4); backp++; break;
 						} else if(types[v]=='I') { 
 							printf("INLI");
@@ -379,12 +406,12 @@ int main(int argc,char *argv[]) {
 	memset(lens,0,sizeof(lens));
 	memset(types,0,sizeof(types));
 
-	find(*(uint64_t*)"tini\0\0\0",0);
-	find(*(uint64_t*)"niam\0\0\0",0);
-	types[find(0x7b,0)]='S';
-	types[find(0x7d,0)]='S';
-	find(0x2e,0);
-	find('e',0);
+	find(0x090e0914,0); //init
+	find(0x0d01090e,0); //main
+	types[find(fromascii(0x7b),0)]='S';
+	types[find(fromascii(0x7d),0)]='S';
+	find(fromascii(0x2e),0);
+	find(5,0);
 	if(argc>1) { savename=argv[1]; }
 	load(); dump();
 	soreload();
