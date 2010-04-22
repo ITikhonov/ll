@@ -31,7 +31,6 @@ int main() {
 	}
 	fprintf(f,"};\n\nunsigned char fontm[]={");
 	for(i=0;i<256;i++) {
-		if(lens[i]==-1) break;
 		fprintf(f,"%u,",lens[i]+1);
 	}
 	fprintf(f,"};\n\nint fontw=%u;\n",w);

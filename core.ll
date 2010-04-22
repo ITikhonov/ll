@@ -1,4 +1,4 @@
-main:301#,302#,500100 1 303#, names drawnames
+main:301#,302#,500100 1 303#, 80008cursor< names drawnames
 char:104#,
 dot:102#,
 ?::48 39 06
@@ -32,4 +32,8 @@ cmpb::3A 06
 storeb::8A 0E 88 08 48 AD 48 AD
 init:300#,
 
-drawnames:,
+cursor:::00 00 00 00 00 00 00 00
+drawchar:FFand={,.} cursor>~303#1+cursor>+cursor<
+drawcell:8rol"drawchar 8rol"drawchar  8rol"drawchar 8rol"drawchar 8rol"drawchar 8rol"drawchar 8rol"drawchar 8rol drawchar
+drawnames:"> 0?,={,,.} drawcell cursor>80000+FFFF0000and8+ cursor< 8+drawnames
+

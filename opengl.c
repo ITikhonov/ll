@@ -11,6 +11,7 @@ SDL_Surface *fontsf;
 
 void sdl_poll() {
     SDL_Event event;
+    SDL_Flip(surface);
     while(SDL_PollEvent(&event)) {
 	    switch(event.type) {
 		case SDL_KEYDOWN:
@@ -55,11 +56,12 @@ void sdl_clear() {
     SDL_FillRect(surface,0,0xffffff);
 }
 
-void sdl_char(int c, int x, int y) {
-    SDL_Rect s={c*8,0,8,8};
-    SDL_Rect d={x,y,8,8};
+int sdl_char(int c, int x, int y) {
+    int w=fontm[c];
+    SDL_Rect s={c*8,0,w,8};
+    SDL_Rect d={x,y,w,8};
     SDL_BlitSurface(fontsf,&s,surface,&d);
-    SDL_Flip(surface);
+    return w;
 }
 
 #ifdef TEST
