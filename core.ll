@@ -37,3 +37,4 @@ drawchar:FFand={,.} cursor>~303#1+cursor>+cursor<
 drawcell:8rol"drawchar 8rol"drawchar  8rol"drawchar 8rol"drawchar 8rol"drawchar 8rol"drawchar 8rol"drawchar 8rol drawchar
 drawnames:"> 0?,={,,.} drawcell cursor>80000+FFFF0000and8+ cursor< 8+drawnames
 
+drawforth:

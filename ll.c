@@ -24,9 +24,11 @@ union faddr {
 uint64_t names[512];
 union faddr addrs[512];
 uint64_t lens[512];
-char types[512];
+uint8_t types[512];
 
 uint64_t llkick(uint64_t f);
+
+enum wordtype {UNDEF,FORTH,INLINE,DATA,ASM,EXTEND};
 
 
 // """abcdefghijklmnopqrstuvwxyz0123456789ABCDEF.,"^~?=_{}:@"""
@@ -88,9 +90,9 @@ int find(uint64_t w, uint64_t pre) {
 	printf("\n");
 	for(n=0;n<512-(pre?1:0);n++) {
 		if(!names[n]) {
-			if(pre) { names[n]=pre; names[n+1]=w; types[n+1]='.'; }
+			if(pre) { names[n]=pre; names[n+1]=w; types[n+1]=EXTEND; }
 			else { names[n]=w; }
-			types[n]='U'; addrs[n].v=0;
+			types[n]=UNDEF; addrs[n].v=0;
 			break;
 		}
 
@@ -148,13 +150,9 @@ void load() {
 		for(;p<e;p++) {
 			if(*p==':') {
 				if(tp!=':') {
-					cw=find(nm,pre); types[cw]='F'; nm=' '; pre=0; tp=':';
+					cw=find(nm,pre); types[cw]=FORTH; nm=' '; pre=0; tp=':';
 				} else {
-					switch(types[cw]) {
-					case 'F': types[cw]='I'; break;
-					case 'I': types[cw]='D'; break;
-					case 'D': types[cw]='A'; break;
-					}
+					types[cw]++;
 				}
 				continue;
 			}
@@ -167,7 +165,7 @@ void load() {
 
 			if(tp=='O'||tc!=tp) {
 				if(tp!=' '&&tp!=':') {
-					if(types[cw]=='F') { append(cw,find(nm,pre)); }
+					if(types[cw]==FORTH) { append(cw,find(nm,pre)); }
 					else { append8(cw,unhex(nm)|(unhex(nm>>8)<<4)); }
 				}
 				nm=fromascii(*p); pre=0;
@@ -237,13 +235,13 @@ void compile() {
 		uint8_t *backs[16], **backp=&backs[16];
 		printf("COMPILE:"); print_name(i); printf("\n");
 		switch(types[i]) {
-		case 'U':
+		case UNDEF:
 			undef++; break;
-		case 'A':
+		case ASM:
 			caddrs[i]=p; memcpy(p,addrs[i].v,lens[i]); p+=lens[i];
 			fdump(stdout,caddrs[i],lens[i]);
 			break;
-		case 'F':
+		case FORTH:
 			caddrs[i]=p;
 			{
 				struct fcode *a=addrs[i].f;
@@ -287,10 +285,10 @@ void compile() {
 							*p++=0x00; *p++=0x00; *p++=0x00; *p++=0x00; break;
 						} else if(c==52) { // '}'
 							*(uint32_t*)(*backp)=p-(*backp+4); backp++; break;
-						} else if(types[v]=='I') { 
+						} else if(types[v]==INLINE) { 
 							printf("INLI");
 							memcpy(p,addrs[v].v,lens[v]); p+=lens[v];
-						} else if(types[v]=='D'||types[v]=='T') { 
+						} else if(types[v]==DATA||types[v]=='T') { 
 							printf("\ndata word!\n");
 							v=(uint64_t)(addrs[v].v);
 							memcpy(p,dup_code,7); p+=7;
@@ -316,7 +314,7 @@ void compile() {
 				}
 				*p++=0xc3;
 			}
-			case 'D': break;
+			case DATA: break;
 		}
 		printf("total: ");
 		if(caddrs[i]) fdump(stdout,caddrs[i],p-caddrs[i]);
@@ -335,9 +333,9 @@ void dump() {
 		if(!names[i]) continue;
 		uint64_t nm=names[i];
 		print_name(i);
-		printf(":(%c%x) ",types[i],i);
+		printf(":(%c%x) ","UFIDAE"[types[i]],i);
 		switch(types[i]) {
-		case 'F': {
+		case FORTH: {
 			struct fcode *p=addrs[i].f;
 			struct fcode *e=(struct fcode*)(addrs[i].v+lens[i]);
 			for(;p<e;p++) {
@@ -345,11 +343,9 @@ void dump() {
 				printf("[%x] ",p->n);
 			}
 		} break;
-		case 'I':
-		case 'D':
-		case 'A': fdump(stdout,addrs[i].v,lens[i]); break;
-		case 'T':
-			printf("[%lx]",lens[i]);
+		case INLINE:
+		case DATA:
+		case ASM: fdump(stdout,addrs[i].v,lens[i]); break;
 		default:;
 		}
 		printf("\n");
