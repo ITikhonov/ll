@@ -295,7 +295,7 @@ void compile() {
 							*p++=0x48; *p++=0xb8;
 							*(uint64_t*)p=v; p+=8;
 						} else {
-							if(l==0 || (l>0&&a[1].n==4)) {
+							if(l==0 || (l>0&&names[a[1].n]==43)) {
 								printf("JUMP %lx\n",v);
 								*p++=0xff; *p++=0x24; *p++=0x25;
 							} else {
@@ -402,12 +402,12 @@ int main(int argc,char *argv[]) {
 	memset(lens,0,sizeof(lens));
 	memset(types,0,sizeof(types));
 
+	find(5,0); //e
 	find(0x090e0914,0); //init
 	find(0x0d01090e,0); //main
 	types[find(fromascii(0x7b),0)]='S';
 	types[find(fromascii(0x7d),0)]='S';
 	find(fromascii(0x2e),0);
-	find(5,0);
 	if(argc>1) { savename=argv[1]; }
 	load(); dump();
 	soreload();
@@ -415,17 +415,17 @@ int main(int argc,char *argv[]) {
 
 	llsp--;
 
-	llcall(caddrs[0]);
+	llcall(caddrs[1]);
 	for(;;) {
 		if(need_compile) {
 			compile(); dump(); need_compile=0;
-			if(types[5]=='F') {
-				llcall(caddrs[5]);
-				types[5]='U';
+			if(types[0]=='F') {
+				llcall(caddrs[0]);
+				types[0]='U';
 			}
 			
 		}
-		llcall(caddrs[1]);
+		llcall(caddrs[2]);
 	}
 	sodown();
 	return 0;

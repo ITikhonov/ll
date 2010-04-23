@@ -38,5 +38,5 @@ drawcell:8rol"drawchar 8rol"drawchar  8rol"drawchar 8rol"drawchar 8rol"drawchar 
 drawnames:"> 0?,={,,.} drawcell cursor>8+cursor< "drawdef cursor>80000+FFFF0000and8+ cursor< 8+drawnames
 drawdef:names- "3shr types+>1cmpb,,={ "addrs+> ^lens+>^+ drawforth },
 drawforth:^> drawword drawword drawword drawword, ~8+~?_{drawforth.},,.
-drawword:"FFFFand3shl names+>drawcell 10shr
+drawword:"FFFFand={,.}3shl names+>drawcell 10shr
 
