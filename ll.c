@@ -114,7 +114,7 @@ void fdump(FILE *f, uint8_t *a, int l) {
 
 static void append(int cw, uint16_t n) {
 	int nlen=lens[cw]+sizeof(struct fcode);
-	addrs[cw].f=realloc(addrs[cw].f,nlen);
+	addrs[cw].f=realloc(addrs[cw].f,(nlen&0xfffffff8)+8);
 	union faddr c;
 	c.v=addrs[cw].v+lens[cw];
 	c.f->n=n;
@@ -123,7 +123,7 @@ static void append(int cw, uint16_t n) {
 
 static void append8(int cw, uint8_t v) {
 	int nlen=lens[cw]+1;
-	addrs[cw].v=realloc(addrs[cw].v,nlen);
+	addrs[cw].v=realloc(addrs[cw].v,(nlen&0xfffffff8)+8);
 	*(addrs[cw].v+lens[cw])=v;
 	lens[cw]=nlen;
 }
