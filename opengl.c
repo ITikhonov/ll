@@ -64,6 +64,11 @@ int sdl_char(int c, int x, int y) {
     return w;
 }
 
+void sdl_color(uint64_t c) {
+    SDL_Color b={(c>>16)&0xff,(c>>8)&0xff,c&0xff};
+    SDL_SetColors(fontsf,&b,0,1);
+}
+
 #ifdef TEST
 
 int main() {

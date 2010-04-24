@@ -32,10 +32,11 @@ cmpb::3A 06
 storeb::8A 0E 88 08 48 AD 48 AD
 init:300#,
 
+color:304#,
 cursor:::00 00 00 00 00 00 00 00
 drawchar:FFand={,.} cursor>~303#1+advance
 drawcell:8rol"drawchar 8rol"drawchar 8rol"drawchar 8rol"drawchar 8rol"drawchar 8rol"drawchar 8rol"drawchar 8rol "drawchar FFand1B?,,_{2advance}.
-drawnames:"> 0?,={,,.} drawcell 8advance "drawdef cursor>80000+FFFF0000and8+ cursor< 8+drawnames
+drawnames:"> 0?,={,,.} FF0000color drawcell 8advance 0color "drawdef cursor>80000+FFFF0000and8+ cursor< 8+drawnames
 drawdef:names- "3shr types+>1cmpb,,={ "addrs+> ^lens+>^+ drawforth },
 drawforth:^> drawword drawword drawword drawword, ~8+~?_{drawforth.},,.
 drawword:"FFFFand={,.}3shl names+>drawcell 10shr

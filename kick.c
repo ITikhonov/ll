@@ -79,6 +79,7 @@ void sdl_init();
 void sdl_poll();
 void sdl_clear();
 int sdl_char(int c, int x, int y);
+void sdl_color(uint64_t c);
 
 
 uint64_t kick(uint64_t f) {
@@ -105,6 +106,7 @@ uint64_t kick(uint64_t f) {
 			int p=*llsp++;
 			return sdl_char(c,p&0xffff,p>>16);
 		};
+	case 0x304: sdl_color(*llsp++); break;
 	}
 	return 0;
 }
