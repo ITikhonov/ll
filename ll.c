@@ -117,7 +117,8 @@ static void append(int cw, uint16_t n) {
 	nlen=(nlen&0xfffffff8)+8;
 	h=addrs[cw]=realloc(h,nlen+sizeof(struct hdr));
 	uint16_t *a=(uint16_t *) (h->len + (uint8_t*)(h->code));
-	*a=n;
+	a[0]=n;
+	a[1]=0;
 	h->len+=2;
 }
 
