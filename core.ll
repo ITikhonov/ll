@@ -1,4 +1,4 @@
-main:301#,302#,80008cursor< names drawnames
+main:301#,302#,80008cursor< addrs draw
 char:104#,
 dot:102#,
 ?::48 39 06
@@ -21,7 +21,6 @@ rolb::48 C1 C0 08
 shl::88 C1 48 D3 26 48 AD
 shr::88 C1 48 D3 2E 48 AD
 -::48 29 06 48 AD
-names:200#
 addrs:201#
 +::48 01 06 48 AD
 realloc:204#
@@ -32,6 +31,8 @@ init:300#,
 
 color:304#,
 cursor:::00 00 00 00 00 00 00 00
-drawchar:FFand={,.} cursor>~303#1+advance
+drawchar:cursor>~303#1+advance
 advance:cursor>+cursor<
-
+draw:">0?,={,,.} "> 1cmpb,={10shr ~drawname,, cursor>FFFF0000and80008+cursor< 8+draw.},,  8+draw
+drawname:8+"> dc dc dc dc dc dc dc dc, 8+"> dc dc dc dc dc dc dc dc, 8+
+dc:8rol"FFand={,.}drawchar

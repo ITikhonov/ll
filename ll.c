@@ -15,18 +15,20 @@ extern void llvm();
 
 char *savename="state.ll";
 
-union faddr {
-	uint8_t *v;
-	uint16_t *f;
-};
+struct hdr {
+	uint16_t type;
+	uint32_t len;
+	uint16_t reserved;
+	uint64_t name[2];
+	uint8_t code[];
+}  __attribute__((packed));
 
-uint64_t names[512];
-#define PREFIX (8)
-union faddr addrs[512];
+#define PREFIX (24)
+struct hdr *addrs[512];
 
 uint64_t llkick(uint64_t f);
 
-enum wordtype {UNDEF,FORTH,INLINE,DATA,ASM,EXTEND};
+enum wordtype {UNDEF,FORTH,INLINE,DATA,ASM};
 
 
 // """abcdefghijklmnopqrstuvwxyz0123456789ABCDEF.,"^~?=_{}:@"""
@@ -71,14 +73,11 @@ void print_nm(uint64_t nm) {
 }
 
 void print_name(int n) {
-	uint64_t nm=names[n];
+	uint64_t nm=addrs[n]->name[0];
 	print_nm(nm);
-	if(nm>>56) {
-		nm=names[n+1];
-		print_nm(nm);
-	}
+	nm=addrs[n]->name[1];
+	if(nm) { print_nm(nm); }
 }
-
 
 int find(uint64_t w, uint64_t pre) {
 	int n;
@@ -87,20 +86,19 @@ int find(uint64_t w, uint64_t pre) {
 	print_nm(w);
 	printf("\n");
 	for(n=0;n<512-(pre?1:0);n++) {
-		if(!names[n]) {
-			if(pre) { names[n]=pre; names[n+1]=w; }
-			else { names[n]=w; }
-			addrs[n].v=malloc(8);
-			addrs[n].f[1]=0;
-			addrs[n].f[0]=FORTH;
+		struct hdr *h=addrs[n];
+		if(!h) {
+			h=addrs[n]=malloc(8);
+			if(pre) { h->name[0]=pre; h->name[1]=w; }
+			else { h->name[0]=w; h->name[1]=0; }
+			h->len=0;
+			h->type=UNDEF;
 			break;
 		}
 
 
-		if(pre) { if(names[n]==pre&&names[n+1]==w) break; }
-		else { if(names[n]==w) break; }
-
-		if((names[n]>>56)) n++;
+		if(pre) { if(h->name[0]==pre&&h->name[1]==w) break; }
+		else { if(h->name[0]==w) break; }
 	}
 	return n;
 }
@@ -112,31 +110,25 @@ void fdump(FILE *f, uint8_t *a, int l) {
 	}
 }
 
-int len(int x) {
-	if(addrs[x].f) return addrs[x].f[1];
-	return 0;
-}
-
-uint16_t *type(int x){
-	return addrs[x].f;
-}
-
 static void append(int cw, uint16_t n) {
-	int olen=len(cw)+PREFIX;
-	int nlen=olen+sizeof(*addrs[cw].f);
-	addrs[cw].f=realloc(addrs[cw].f,(nlen&0xfffffff8)+8);
-	union faddr c;
-	c.v=addrs[cw].v+olen;
-	*c.f=n;
-	addrs[cw].f[1]=nlen-PREFIX;
+	struct hdr *h=addrs[cw];
+	uint32_t nlen=h->len+2;
+	printf("nlen %u [%u]\n",nlen,n);
+	nlen=(nlen&0xfffffff8)+8;
+	h=addrs[cw]=realloc(h,nlen+sizeof(struct hdr));
+	uint16_t *a=(uint16_t *) (h->len + (uint8_t*)(h->code));
+	*a=n;
+	h->len+=2;
 }
 
-static void append8(int cw, uint8_t v) {
-	int olen=len(cw)+PREFIX;
-	int nlen=olen+1;
-	addrs[cw].v=realloc(addrs[cw].v,(nlen&0xfffffff8)+8);
-	*(addrs[cw].v+olen)=v;
-	addrs[cw].f[1]=nlen-PREFIX;
+static void append8(int cw, uint8_t n) {
+	struct hdr *h=addrs[cw];
+	uint32_t nlen=h->len+1;
+	nlen=(nlen&0xfffffff8)+8;
+	h=addrs[cw]=realloc(h,nlen+sizeof(struct hdr));
+	uint8_t *a=(h->len + (uint8_t*)(h->code));
+	*a=n;
+	h->len+=1;
 }
 
 uint64_t unhex(uint8_t x) {
@@ -160,9 +152,9 @@ void load() {
 		for(;p<e;p++) {
 			if(*p==':') {
 				if(tp!=':') {
-					cw=find(nm,pre); *type(cw)=FORTH; nm=' '; pre=0; tp=':';
+					cw=find(nm,pre); addrs[cw]->type=FORTH; nm=' '; pre=0; tp=':';
 				} else {
-					(*type(cw))++;
+					addrs[cw]->type++;
 				}
 				continue;
 			}
@@ -175,7 +167,7 @@ void load() {
 
 			if(tp=='O'||tc!=tp) {
 				if(tp!=' '&&tp!=':') {
-					if(*type(cw)==FORTH) { append(cw,find(nm,pre)); }
+					if(addrs[cw]->type==FORTH) { append(cw,find(nm,pre)); }
 					else { append8(cw,unhex(nm)|(unhex(nm>>8)<<4)); }
 				}
 				nm=fromascii(*p); pre=0;
@@ -194,22 +186,18 @@ void load() {
 }
 
 
-int namecmp(const void *a, const void *b) {
-	return memcmp(((char *)(names+*(int*)a))+1,((char *)(names+*(int *)b))+1,7);
-}
-
 uint8_t comp[65535];
 uint8_t *caddrs[512];
 
 
 uint64_t make_num(int n) {
-	uint64_t nm=names[n];
+	uint64_t nm=addrs[n]->name[0];
 	uint64_t w=0;
 	int i;
 
 	for(i=0;i<32&&nm;i+=4) { w|=unhex(nm&0xff)<<i; nm>>=8; }
 	if(i==32) {
-		uint64_t pre=w; w=0; nm=names[n+1];
+		uint64_t pre=w; w=0; nm=addrs[n]->name[1];
 		for(i=0;i<32&&nm;i+=4) { w|=unhex(nm&0xff)<<i; nm>>=8; }
 		w|=pre<<i;
 	}
@@ -241,32 +229,36 @@ void compile() {
 	int undef=0;
 	uint8_t *p=comp;
 	int i; for(i=0;i<512;i++) {
-		if(!names[i]) continue;
+		struct hdr *h=addrs[i];
+		if(!h) continue;
+		
 		uint8_t *backs[16], **backp=&backs[16];
 		printf("COMPILE:"); print_name(i); printf("\n");
-		switch(*type(i)) {
+		switch(h->type) {
 		case UNDEF:
 			undef++; break;
 		case ASM:
-			caddrs[i]=p; memcpy(p,addrs[i].v+PREFIX,len(i)); p+=len(i);
-			fdump(stdout,caddrs[i],len(i));
+			caddrs[i]=p; memcpy(p,h->code,h->len); p+=h->len;
+			fdump(stdout,caddrs[i],h->len);
 			break;
 		case FORTH:
 			caddrs[i]=p;
 			{
-				uint16_t *a=(uint16_t *)(addrs[i].v+PREFIX);
-				int l=len(i)/sizeof(*addrs[i].f);
+				uint16_t *a=(uint16_t *)(h->code);
+				int l=h->len/sizeof(uint16_t);
 				while(l--) {
 					uint8_t *st=p;
 					uint64_t v=*a;
+					struct hdr *hv=addrs[v];
 
-					print_name(*a);
-					uint64_t nm=names[*a];
+					print_name(v);
+					uint64_t nm=hv->name[0];
+					uint64_t next=l?addrs[*(a+1)]->name[0]:0;
 					char c=nm&0xff;
 					switch(c) {
 					case 27 ... 42:
-						v=make_num(*a);
-						if(l&&names[*(a+1)]==55) { // '#'
+						v=make_num(v);
+						if(next==55) { // '#'
 							printf("KICK %lx\n",v);
 							p=compile_kick(p,v);
 							a++; l--;
@@ -281,7 +273,7 @@ void compile() {
 						break;
 
 					default:
-						if(l&&names[*(a+1)]==55) { // '#'
+						if(next==55) { // '#'
 							printf("QUOT %lx\n",v);
 							memcpy(p,dup_code,7); p+=7;
 							*p++=0x48; *p++=0xb8;
@@ -295,17 +287,17 @@ void compile() {
 							*p++=0x00; *p++=0x00; *p++=0x00; *p++=0x00; break;
 						} else if(c==52) { // '}'
 							*(uint32_t*)(*backp)=p-(*backp+4); backp++; break;
-						} else if(*type(v)==INLINE) { 
+						} else if(hv->type==INLINE) { 
 							printf("INLI");
-							memcpy(p,addrs[v].v+PREFIX,len(v)); p+=len(v);
-						} else if(*type(v)==DATA||*type(v)=='T') { 
+							memcpy(p,hv->code,hv->len); p+=hv->len;
+						} else if(hv->type==DATA||hv->type=='T') { 
 							printf("\ndata word!\n");
-							v=(uint64_t)(addrs[v].v+PREFIX);
+							v=(uint64_t)(hv->code);
 							memcpy(p,dup_code,7); p+=7;
 							*p++=0x48; *p++=0xb8;
 							*(uint64_t*)p=v; p+=8;
 						} else {
-							if(l==0 || (l>0&&names[a[1]]==43)) {
+							if(l==0||next==43) {
 								printf("JUMP %lx\n",v);
 								*p++=0xff; *p++=0x24; *p++=0x25;
 							} else {
@@ -329,7 +321,6 @@ void compile() {
 		printf("total: ");
 		if(caddrs[i]) fdump(stdout,caddrs[i],p-caddrs[i]);
 		printf("\n\n");
-		if(names[i]>>56) i++;
 	}
 	printf("CODESIZE: %lu\n", p-comp);
 	if(undef) printf("UNDEFS!!: %u\n", undef);
@@ -337,18 +328,18 @@ void compile() {
 #endif
 
 void dump() {
-#define C1 {char *v=((char*)&nm)+7; pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--); }
 	printf("\n=== dump ===\n");
 	int i;
 	for(i=0;i<512;i++) {
-		if(!names[i]) continue;
-		uint64_t nm=names[i];
+		struct hdr *h=addrs[i];
+		if(!h) continue;
+		uint64_t nm=h->name[0];
 		print_name(i);
-		printf(":(%c%x) ","UFIDAE"[*type(i)],i);
-		switch(*type(i)) {
+		printf(":(%c%x) ","UFIDAE"[h->type],i);
+		switch(h->type) {
 		case FORTH: {
-			uint16_t *p=(uint16_t *)(addrs[i].v+PREFIX);
-			uint16_t *e=(uint16_t *)(addrs[i].v+len(i));
+			uint16_t *p=(uint16_t *)(h->code);
+			uint16_t *e=(uint16_t *)((uint8_t*)p+h->len);
 			for(;p<e;p++) {
 				print_name(*p);
 				printf("[%x] ",*p);
@@ -356,14 +347,13 @@ void dump() {
 		} break;
 		case INLINE:
 		case DATA:
-		case ASM: fdump(stdout,addrs[i].v+PREFIX,len(i)); break;
+		case ASM: fdump(stdout,h->code,h->len); break;
 		default:;
 		}
 		printf("\n");
 		if(nm>>56) i++;
 	}
 	printf("%ld\n",*llsp);
-#undef C1
 }
 
 
@@ -408,7 +398,6 @@ uint64_t llkick(uint64_t f) {
 }
 
 int main(int argc,char *argv[]) {
-	memset(names,0,sizeof(names));
 	memset(addrs,0,sizeof(addrs));
 
 	find(5,0); //e
@@ -428,11 +417,6 @@ int main(int argc,char *argv[]) {
 	for(;;) {
 		if(need_compile) {
 			compile(); dump(); need_compile=0;
-			if(*type(0)==FORTH) {
-				llcall(caddrs[0]);
-				*type(0)=UNDEF;
-			}
-			
 		}
 		llcall(caddrs[2]);
 	}
