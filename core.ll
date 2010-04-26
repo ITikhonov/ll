@@ -23,7 +23,6 @@ shr::88 C1 48 D3 2E 48 AD
 -::48 29 06 48 AD
 names:200#
 addrs:201#
-lens:202#
 types:203#
 +::48 01 06 48 AD
 realloc:204#
@@ -37,7 +36,7 @@ cursor:::00 00 00 00 00 00 00 00
 drawchar:FFand={,.} cursor>~303#1+advance
 drawcell:8rol"drawchar 8rol"drawchar 8rol"drawchar 8rol"drawchar 8rol"drawchar 8rol"drawchar 8rol"drawchar 8rol "drawchar FFand1B?,,_{2advance}.
 drawnames:"> 0?,={,,.} FF0000color drawcell 8advance 0color "drawdef cursor>80000+FFFF0000and8+ cursor< 8+drawnames
-drawdef:names- "3shr types+>1cmpb,,={ "addrs+> ^lens+>^+ drawforth },
+drawdef:names- "3shr types+>1cmpb,,={ "addrs+> ">FFFFand^+ ~2+~ drawforth },
 drawforth:^> drawword drawword drawword drawword, ~8+~?_{drawforth.},,.
 drawword:"FFFFand={,.}3shl names+>drawcell 10shr
 advance:cursor>+cursor<

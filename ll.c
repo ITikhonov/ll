@@ -15,15 +15,13 @@ extern void llvm();
 
 char *savename="state.ll";
 
-struct fcode { uint16_t n; } __attribute__((__packed__));
 union faddr {
 	uint8_t *v;
-	struct fcode *f;
+	uint16_t *f;
 };
 
 uint64_t names[512];
 union faddr addrs[512];
-uint64_t lens[512];
 uint8_t types[512];
 
 uint64_t llkick(uint64_t f);
@@ -112,20 +110,27 @@ void fdump(FILE *f, uint8_t *a, int l) {
 	}
 }
 
+int len(int x) {
+	if(addrs[x].f) return *addrs[x].f;
+	return 0;
+}
+
 static void append(int cw, uint16_t n) {
-	int nlen=lens[cw]+sizeof(struct fcode);
+	int olen=len(cw)+2;
+	int nlen=olen+sizeof(*addrs[cw].f);
 	addrs[cw].f=realloc(addrs[cw].f,(nlen&0xfffffff8)+8);
 	union faddr c;
-	c.v=addrs[cw].v+lens[cw];
-	c.f->n=n;
-	lens[cw]=nlen;
+	c.v=addrs[cw].v+olen;
+	*c.f=n;
+	*addrs[cw].f=nlen-2;
 }
 
 static void append8(int cw, uint8_t v) {
-	int nlen=lens[cw]+1;
+	int olen=len(cw)+2;
+	int nlen=olen+1;
 	addrs[cw].v=realloc(addrs[cw].v,(nlen&0xfffffff8)+8);
-	*(addrs[cw].v+lens[cw])=v;
-	lens[cw]=nlen;
+	*(addrs[cw].v+olen)=v;
+	*addrs[cw].f=nlen-2;
 }
 
 uint64_t unhex(uint8_t x) {
@@ -238,25 +243,25 @@ void compile() {
 		case UNDEF:
 			undef++; break;
 		case ASM:
-			caddrs[i]=p; memcpy(p,addrs[i].v,lens[i]); p+=lens[i];
-			fdump(stdout,caddrs[i],lens[i]);
+			caddrs[i]=p; memcpy(p,addrs[i].v+2,len(i)); p+=len(i);
+			fdump(stdout,caddrs[i],len(i));
 			break;
 		case FORTH:
 			caddrs[i]=p;
 			{
-				struct fcode *a=addrs[i].f;
-				int l=lens[i]/sizeof(struct fcode);
+				uint16_t *a=addrs[i].f+1;
+				int l=len(i)/sizeof(*addrs[i].f);
 				while(l--) {
 					uint8_t *st=p;
-					uint64_t v=a->n;
+					uint64_t v=*a;
 
-					print_name(a->n);
-					uint64_t nm=names[a->n];
+					print_name(*a);
+					uint64_t nm=names[*a];
 					char c=nm&0xff;
 					switch(c) {
 					case 27 ... 42:
-						v=make_num(a->n);
-						if(l&&names[(a+1)->n]==55) { // '#'
+						v=make_num(*a);
+						if(l&&names[*(a+1)]==55) { // '#'
 							printf("KICK %lx\n",v);
 							p=compile_kick(p,v);
 							a++; l--;
@@ -271,7 +276,7 @@ void compile() {
 						break;
 
 					default:
-						if(l&&names[(a+1)->n]==55) { // '#'
+						if(l&&names[*(a+1)]==55) { // '#'
 							printf("QUOT %lx\n",v);
 							memcpy(p,dup_code,7); p+=7;
 							*p++=0x48; *p++=0xb8;
@@ -287,15 +292,15 @@ void compile() {
 							*(uint32_t*)(*backp)=p-(*backp+4); backp++; break;
 						} else if(types[v]==INLINE) { 
 							printf("INLI");
-							memcpy(p,addrs[v].v,lens[v]); p+=lens[v];
+							memcpy(p,addrs[v].v+2,len(v)); p+=len(v);
 						} else if(types[v]==DATA||types[v]=='T') { 
 							printf("\ndata word!\n");
-							v=(uint64_t)(addrs[v].v);
+							v=(uint64_t)(addrs[v].v+2);
 							memcpy(p,dup_code,7); p+=7;
 							*p++=0x48; *p++=0xb8;
 							*(uint64_t*)p=v; p+=8;
 						} else {
-							if(l==0 || (l>0&&names[a[1].n]==43)) {
+							if(l==0 || (l>0&&names[a[1]]==43)) {
 								printf("JUMP %lx\n",v);
 								*p++=0xff; *p++=0x24; *p++=0x25;
 							} else {
@@ -336,16 +341,16 @@ void dump() {
 		printf(":(%c%x) ","UFIDAE"[types[i]],i);
 		switch(types[i]) {
 		case FORTH: {
-			struct fcode *p=addrs[i].f;
-			struct fcode *e=(struct fcode*)(addrs[i].v+lens[i]);
+			uint16_t *p=addrs[i].f+1;
+			uint16_t *e=(uint16_t *)(addrs[i].v+len(i));
 			for(;p<e;p++) {
-				print_name(p->n);
-				printf("[%x] ",p->n);
+				print_name(*p);
+				printf("[%x] ",*p);
 			}
 		} break;
 		case INLINE:
 		case DATA:
-		case ASM: fdump(stdout,addrs[i].v,lens[i]); break;
+		case ASM: fdump(stdout,addrs[i].v+2,len(i)); break;
 		default:;
 		}
 		printf("\n");
@@ -375,7 +380,7 @@ void soreload() {
 	dl=dlopen("./kick.so",RTLD_NOW);
 	if(!dl) printf("no kick.so: %s\n", dlerror());
 	void (*init_so)()=dlsym(dl,"init");
-	if(init_so) init_so(&llsp,names,addrs,lens,types,llcall);
+	if(init_so) init_so();
 	else printf("no init in so\n");
 	kick_so=dlsym(dl,"kick");
 	if(!kick_so) printf("no kick in so\n");
@@ -399,7 +404,6 @@ uint64_t llkick(uint64_t f) {
 int main(int argc,char *argv[]) {
 	memset(names,0,sizeof(names));
 	memset(addrs,0,sizeof(addrs));
-	memset(lens,0,sizeof(lens));
 	memset(types,0,sizeof(types));
 
 	find(5,0); //e
