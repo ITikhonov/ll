@@ -14,7 +14,6 @@ extern uint64_t *llsp;
 
 extern uint8_t names[];
 extern uint8_t addrs[];
-extern uint8_t types[];
 
 extern void *caddrs[512];
 
@@ -91,7 +90,6 @@ uint64_t kick(uint64_t f) {
 
 	case 0x200: return (uint64_t)names;
 	case 0x201: return (uint64_t)addrs;
-	case 0x203: return (uint64_t)types;
 	case 0x204: { void *p=(void*)(*llsp++); return (uint64_t)realloc(p,*llsp++); }
 	case 0x205: write(history,llsp,1); llsp++; break;
 	case 0x206: { uint8_t c=0; read(history,&c,1); return c;}

@@ -21,8 +21,8 @@ union faddr {
 };
 
 uint64_t names[512];
+#define PREFIX (8)
 union faddr addrs[512];
-uint8_t types[512];
 
 uint64_t llkick(uint64_t f);
 
@@ -88,9 +88,11 @@ int find(uint64_t w, uint64_t pre) {
 	printf("\n");
 	for(n=0;n<512-(pre?1:0);n++) {
 		if(!names[n]) {
-			if(pre) { names[n]=pre; names[n+1]=w; types[n+1]=EXTEND; }
+			if(pre) { names[n]=pre; names[n+1]=w; }
 			else { names[n]=w; }
-			types[n]=UNDEF; addrs[n].v=0;
+			addrs[n].v=malloc(8);
+			addrs[n].f[1]=0;
+			addrs[n].f[0]=FORTH;
 			break;
 		}
 
@@ -111,26 +113,30 @@ void fdump(FILE *f, uint8_t *a, int l) {
 }
 
 int len(int x) {
-	if(addrs[x].f) return *addrs[x].f;
+	if(addrs[x].f) return addrs[x].f[1];
 	return 0;
 }
 
+uint16_t *type(int x){
+	return addrs[x].f;
+}
+
 static void append(int cw, uint16_t n) {
-	int olen=len(cw)+2;
+	int olen=len(cw)+PREFIX;
 	int nlen=olen+sizeof(*addrs[cw].f);
 	addrs[cw].f=realloc(addrs[cw].f,(nlen&0xfffffff8)+8);
 	union faddr c;
 	c.v=addrs[cw].v+olen;
 	*c.f=n;
-	*addrs[cw].f=nlen-2;
+	addrs[cw].f[1]=nlen-PREFIX;
 }
 
 static void append8(int cw, uint8_t v) {
-	int olen=len(cw)+2;
+	int olen=len(cw)+PREFIX;
 	int nlen=olen+1;
 	addrs[cw].v=realloc(addrs[cw].v,(nlen&0xfffffff8)+8);
 	*(addrs[cw].v+olen)=v;
-	*addrs[cw].f=nlen-2;
+	addrs[cw].f[1]=nlen-PREFIX;
 }
 
 uint64_t unhex(uint8_t x) {
@@ -138,7 +144,6 @@ uint64_t unhex(uint8_t x) {
 }
 
 void dump();
-
 
 
 void load() {
@@ -155,9 +160,9 @@ void load() {
 		for(;p<e;p++) {
 			if(*p==':') {
 				if(tp!=':') {
-					cw=find(nm,pre); types[cw]=FORTH; nm=' '; pre=0; tp=':';
+					cw=find(nm,pre); *type(cw)=FORTH; nm=' '; pre=0; tp=':';
 				} else {
-					types[cw]++;
+					(*type(cw))++;
 				}
 				continue;
 			}
@@ -170,7 +175,7 @@ void load() {
 
 			if(tp=='O'||tc!=tp) {
 				if(tp!=' '&&tp!=':') {
-					if(types[cw]==FORTH) { append(cw,find(nm,pre)); }
+					if(*type(cw)==FORTH) { append(cw,find(nm,pre)); }
 					else { append8(cw,unhex(nm)|(unhex(nm>>8)<<4)); }
 				}
 				nm=fromascii(*p); pre=0;
@@ -239,17 +244,17 @@ void compile() {
 		if(!names[i]) continue;
 		uint8_t *backs[16], **backp=&backs[16];
 		printf("COMPILE:"); print_name(i); printf("\n");
-		switch(types[i]) {
+		switch(*type(i)) {
 		case UNDEF:
 			undef++; break;
 		case ASM:
-			caddrs[i]=p; memcpy(p,addrs[i].v+2,len(i)); p+=len(i);
+			caddrs[i]=p; memcpy(p,addrs[i].v+PREFIX,len(i)); p+=len(i);
 			fdump(stdout,caddrs[i],len(i));
 			break;
 		case FORTH:
 			caddrs[i]=p;
 			{
-				uint16_t *a=addrs[i].f+1;
+				uint16_t *a=(uint16_t *)(addrs[i].v+PREFIX);
 				int l=len(i)/sizeof(*addrs[i].f);
 				while(l--) {
 					uint8_t *st=p;
@@ -290,12 +295,12 @@ void compile() {
 							*p++=0x00; *p++=0x00; *p++=0x00; *p++=0x00; break;
 						} else if(c==52) { // '}'
 							*(uint32_t*)(*backp)=p-(*backp+4); backp++; break;
-						} else if(types[v]==INLINE) { 
+						} else if(*type(v)==INLINE) { 
 							printf("INLI");
-							memcpy(p,addrs[v].v+2,len(v)); p+=len(v);
-						} else if(types[v]==DATA||types[v]=='T') { 
+							memcpy(p,addrs[v].v+PREFIX,len(v)); p+=len(v);
+						} else if(*type(v)==DATA||*type(v)=='T') { 
 							printf("\ndata word!\n");
-							v=(uint64_t)(addrs[v].v+2);
+							v=(uint64_t)(addrs[v].v+PREFIX);
 							memcpy(p,dup_code,7); p+=7;
 							*p++=0x48; *p++=0xb8;
 							*(uint64_t*)p=v; p+=8;
@@ -324,6 +329,7 @@ void compile() {
 		printf("total: ");
 		if(caddrs[i]) fdump(stdout,caddrs[i],p-caddrs[i]);
 		printf("\n\n");
+		if(names[i]>>56) i++;
 	}
 	printf("CODESIZE: %lu\n", p-comp);
 	if(undef) printf("UNDEFS!!: %u\n", undef);
@@ -338,10 +344,10 @@ void dump() {
 		if(!names[i]) continue;
 		uint64_t nm=names[i];
 		print_name(i);
-		printf(":(%c%x) ","UFIDAE"[types[i]],i);
-		switch(types[i]) {
+		printf(":(%c%x) ","UFIDAE"[*type(i)],i);
+		switch(*type(i)) {
 		case FORTH: {
-			uint16_t *p=addrs[i].f+1;
+			uint16_t *p=(uint16_t *)(addrs[i].v+PREFIX);
 			uint16_t *e=(uint16_t *)(addrs[i].v+len(i));
 			for(;p<e;p++) {
 				print_name(*p);
@@ -350,7 +356,7 @@ void dump() {
 		} break;
 		case INLINE:
 		case DATA:
-		case ASM: fdump(stdout,addrs[i].v+2,len(i)); break;
+		case ASM: fdump(stdout,addrs[i].v+PREFIX,len(i)); break;
 		default:;
 		}
 		printf("\n");
@@ -404,13 +410,12 @@ uint64_t llkick(uint64_t f) {
 int main(int argc,char *argv[]) {
 	memset(names,0,sizeof(names));
 	memset(addrs,0,sizeof(addrs));
-	memset(types,0,sizeof(types));
 
 	find(5,0); //e
 	find(0x090e0914,0); //init
 	find(0x0d01090e,0); //main
-	types[find(fromascii(0x7b),0)]='S';
-	types[find(fromascii(0x7d),0)]='S';
+	find(fromascii(0x7b),0);
+	find(fromascii(0x7d),0);
 	find(fromascii(0x2e),0);
 	if(argc>1) { savename=argv[1]; }
 	load(); dump();
@@ -423,9 +428,9 @@ int main(int argc,char *argv[]) {
 	for(;;) {
 		if(need_compile) {
 			compile(); dump(); need_compile=0;
-			if(types[0]=='F') {
+			if(*type(0)==FORTH) {
 				llcall(caddrs[0]);
-				types[0]='U';
+				*type(0)=UNDEF;
 			}
 			
 		}
