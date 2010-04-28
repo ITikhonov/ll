@@ -11,9 +11,9 @@ int main() {
 	int i=0;
 	for(i=0;i<256;i++) { lens[i]=-1; }
 	for(;;) {
-		int c=getchar();
-		if(c==-1) break;
-		if(c==1){
+		int c=0;
+		if(read(0,&c,1)!=1) break;
+		if(c==0xa0){
 			fprintf(f,"\n");
 			w=i;
 			i=0;

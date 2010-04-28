@@ -47,9 +47,10 @@ void sdl_init()
     if(!surface) { return; }
 
 
-    SDL_Color b={0,0,0},w={255,255,255};
+    SDL_Color b={0,0,0},w={255,255,255},g={0xf0,0xf0,0xf0};
     fontsf=SDL_CreateRGBSurfaceFrom(font,fontw,16,8,fontw,0,0,0,0);
     SDL_SetColors(fontsf,&b,0,1);
+    SDL_SetColors(fontsf,&g,0xe0,1);
     SDL_SetColors(fontsf,&w,255,1);
 }
 
