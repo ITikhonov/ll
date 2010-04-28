@@ -48,7 +48,7 @@ void sdl_init()
 
 
     SDL_Color b={0,0,0},w={255,255,255};
-    fontsf=SDL_CreateRGBSurfaceFrom(font,fontw,8,8,fontw,0,0,0,0);
+    fontsf=SDL_CreateRGBSurfaceFrom(font,fontw,16,8,fontw,0,0,0,0);
     SDL_SetColors(fontsf,&b,0,1);
     SDL_SetColors(fontsf,&w,255,1);
 }
@@ -59,8 +59,8 @@ void sdl_clear() {
 
 int sdl_char(int c, int x, int y) {
     int w=fontm[c];
-    SDL_Rect s={c*8,0,w,8};
-    SDL_Rect d={x,y,w,8};
+    SDL_Rect s={c*8,0,w,16};
+    SDL_Rect d={x,y,w,16};
     SDL_BlitSurface(fontsf,&s,surface,&d);
     return w;
 }

@@ -33,7 +33,7 @@ color:304#,
 cursor:::00 00 00 00 00 00 00 00
 drawchar:cursor>~303#1+advance
 advance:cursor>+cursor<
-draw:">0?,={,,.} "> 1cmpb,={10shr ~drawname cursor>FFFF0000and80+cursor< drawdef, cursor>FFFF0000and80008+cursor< 8+draw.},,  8+draw
+draw:">0?,={,,.} "> 1cmpb,={10shr ~drawname cursor>FFFF0000and80+cursor< drawdef, cursor>FFFF0000and100008+cursor< 8+draw.},,  8+draw
 drawname:8+"> 1B~cmpb~,_{3advance} dc dc dc dc dc dc dc dc, 8+"> dc dc dc dc dc dc dc dc, 8+
 dc:8rol"FFand={,.}drawchar
 drawdef:">FFFFand={,,.} 3shl addrs+> drawname, 2+ drawdef
