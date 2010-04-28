@@ -12,6 +12,7 @@ SDL_Surface *fontsf;
 void sdl_poll() {
     SDL_Event event;
     SDL_Flip(surface);
+    usleep(50000);
     while(SDL_PollEvent(&event)) {
 	    switch(event.type) {
 		case SDL_KEYDOWN:
