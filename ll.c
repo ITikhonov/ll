@@ -24,11 +24,11 @@ struct hdr {
 }  __attribute__((packed));
 
 #define PREFIX (24)
-struct hdr *addrs[512];
+struct hdr *vocs[128];
 
 uint64_t llkick(uint64_t f);
 
-enum wordtype {UNDEF,FORTH,INLINE,DATA,ASM};
+enum wordtype {UNDEF,FORTH,INLINE,DATA,ASM,DICT};
 
 
 // """abcdefghijklmnopqrstuvwxyz0123456789ABCDEF.,"^~?=_{}:@"""
@@ -72,33 +72,46 @@ void print_nm(uint64_t nm) {
 	char *v=((char*)&nm)+7; pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);
 }
 
+struct hdr *getword(int n) {
+	struct hdr **v=(struct hdr**)(vocs[n>>9]->code);
+	n&=0x1ff;
+	return v[n];
+}
+
 void print_name(int n) {
-	uint64_t nm=addrs[n]->name[0];
+	struct hdr *w=getword(n);
+	uint64_t nm=w->name[0];
 	print_nm(nm);
-	nm=addrs[n]->name[1];
+	nm=w->name[1];
 	if(nm) { print_nm(nm); }
 }
 
-int find(uint64_t w, uint64_t pre) {
+
+int find0(uint64_t w, uint64_t pre, struct hdr **cd) {
 	int n;
-	printf("==== ");
-	print_nm(pre);
-	print_nm(w);
-	printf("\n");
 	for(n=0;n<512-(pre?1:0);n++) {
-		struct hdr *h=addrs[n];
-		if(!h) {
-			h=addrs[n]=malloc(8);
-			if(pre) { h->name[0]=pre; h->name[1]=w; }
-			else { h->name[0]=w; h->name[1]=0; }
-			h->len=0;
-			h->type=UNDEF;
-			break;
-		}
-
-
+		struct hdr *h=cd[n];
+		if(!h) { return -n; }
 		if(pre) { if(h->name[0]==pre&&h->name[1]==w) break; }
 		else { if(h->name[0]==w) break; }
+	}
+	return n;
+}
+
+void allocword(int n,uint64_t w, uint64_t pre,struct hdr **cd) {
+	struct hdr *h;
+	h=cd[n]=malloc(8);
+	if(pre) { h->name[0]=pre; h->name[1]=w; }
+	else { h->name[0]=w; h->name[1]=0; }
+	h->len=0;
+	h->type=UNDEF;
+}
+
+int find(uint64_t w, uint64_t pre, struct hdr **cd) {
+	int n=find0(w,pre,cd);
+	if(n<1) {
+		n=-n;
+		allocword(n,w,pre,cd);
 	}
 	return n;
 }
@@ -110,23 +123,23 @@ void fdump(FILE *f, uint8_t *a, int l) {
 	}
 }
 
-static void append(int cw, uint16_t n) {
-	struct hdr *h=addrs[cw];
+static void append(int cw, uint16_t n, struct hdr **cd) {
+	struct hdr *h=cd[cw];
 	uint32_t nlen=h->len+2;
 	printf("nlen %u [%u]\n",nlen,n);
 	nlen=(nlen&0xfffffff8)+8;
-	h=addrs[cw]=realloc(h,nlen+sizeof(struct hdr));
+	h=cd[cw]=realloc(h,nlen+sizeof(struct hdr));
 	uint16_t *a=(uint16_t *) (h->len + (uint8_t*)(h->code));
 	a[0]=n;
 	a[1]=0;
 	h->len+=2;
 }
 
-static void append8(int cw, uint8_t n) {
-	struct hdr *h=addrs[cw];
+static void append8(int cw, uint8_t n, struct hdr **cd) {
+	struct hdr *h=cd[cw];
 	uint32_t nlen=h->len+1;
 	nlen=(nlen&0xfffffff8)+8;
-	h=addrs[cw]=realloc(h,nlen+sizeof(struct hdr));
+	h=cd[cw]=realloc(h,nlen+sizeof(struct hdr));
 	uint8_t *a=(h->len + (uint8_t*)(h->code));
 	*a=n;
 	h->len+=1;
@@ -136,11 +149,12 @@ uint64_t unhex(uint8_t x) {
 	return x-27;
 }
 
-void dump();
+void dump(struct hdr **);
 
 
 void load() {
-#define C1 {char *v=((char*)&nm)+7; pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--); }
+	struct hdr **cd=(struct hdr **)(vocs[0]->code);
+	int cn=0;
 	int f=open(savename,O_RDONLY);
 	if(f<0) return;
 	uint64_t nm=' ',pre=0;
@@ -153,11 +167,20 @@ void load() {
 		for(;p<e;p++) {
 			if(*p==':') {
 				if(tp!=':') {
-					cw=find(nm,pre); addrs[cw]->type=FORTH; nm=' '; pre=0; tp=':';
+					cw=find(nm,pre,cd); cd[cw]->type=FORTH; nm=' '; pre=0; tp=':';
 				} else {
-					addrs[cw]->type++;
+					cd[cw]->type++;
 				}
 				continue;
+			} else if(*p=='|') {
+				cw=find(nm,pre,vocs);  nm=' '; pre=0; tp=':';
+				if(vocs[cw]->type!=DICT) {
+					vocs[cw]->type=DICT;
+					vocs[cw]->len=512;
+					vocs[cw]=realloc(vocs[cw],sizeof(struct hdr)+sizeof(struct hdr *[512]));
+					cd=(struct hdr **)(vocs[cw]->code);
+					cn=cw;
+				}
 			}
 
 
@@ -168,8 +191,16 @@ void load() {
 
 			if(tp=='O'||tc!=tp) {
 				if(tp!=' '&&tp!=':') {
-					if(addrs[cw]->type==FORTH) { append(cw,find(nm,pre)); }
-					else { append8(cw,unhex(nm)|(unhex(nm>>8)<<4)); }
+					if(cd[cw]->type==FORTH) {
+						int n=find0(nm,pre,cd);
+						if(n<0) {
+							int n2=find0(nm,pre,(struct hdr **)(vocs[0]->code));
+							if(n2<0) { n=-n; allocword(n,nm,pre,cd); n=(cn<<9)|n;  }
+							else { n=n2; }
+						}
+						append(cw,n,cd);
+					}
+					else { append8(cw,unhex(nm)|(unhex(nm>>8)<<4),cd); }
 				}
 				nm=fromascii(*p); pre=0;
 			} else {
@@ -181,9 +212,8 @@ void load() {
 		
 	}
 	close(f);
-	dump();
+	dump((struct hdr **)(vocs[0]->code));
 	return;
-#undef C1
 }
 
 
@@ -192,13 +222,14 @@ uint8_t *caddrs[512];
 
 
 uint64_t make_num(int n) {
-	uint64_t nm=addrs[n]->name[0];
+	struct hdr *h=getword(n);
+	uint64_t nm=h->name[0];
 	uint64_t w=0;
 	int i;
 
 	for(i=0;i<32&&nm;i+=4) { w|=unhex(nm&0xff)<<i; nm>>=8; }
 	if(i==32) {
-		uint64_t pre=w; w=0; nm=addrs[n]->name[1];
+		uint64_t pre=w; w=0; nm=h->name[1];
 		for(i=0;i<32&&nm;i+=4) { w|=unhex(nm&0xff)<<i; nm>>=8; }
 		w|=pre<<i;
 	}
@@ -226,7 +257,7 @@ uint8_t *compile_kick(uint8_t *p, uint64_t n) {
 	return p;
 }
 
-void compile() {
+void compile(struct hdr **addrs) {
 	int undef=0;
 	uint8_t *p=comp;
 	int i; for(i=0;i<512;i++) {
@@ -328,7 +359,7 @@ void compile() {
 }
 #endif
 
-void dump() {
+void dump(struct hdr **addrs) {
 	printf("\n=== dump ===\n");
 	int i;
 	for(i=0;i<512;i++) {
@@ -389,7 +420,7 @@ uint64_t llkick(uint64_t f) {
 	switch(f){
 	//case 0: save(); return 0;
 	case 1: load(); return 0;
-	case 2: dump(); return 0;
+	case 2: dump((struct hdr **)(vocs[0]->code)); return 0;
 	case 3: soreload(); return 0;
 	case 4: need_compile=1; return 0;
 	default:
@@ -398,26 +429,34 @@ uint64_t llkick(uint64_t f) {
 	return 0;
 }
 
-int main(int argc,char *argv[]) {
-	memset(addrs,0,sizeof(addrs));
+struct hdr **getcore() {
+	return (struct hdr **)(vocs[0]->code);
+}
 
-	find(5,0); //e
-	find(0x090e0914,0); //init
-	find(0x0d01090e,0); //main
-	find(fromascii(0x7b),0);
-	find(fromascii(0x7d),0);
-	find(fromascii(0x2e),0);
+int main(int argc,char *argv[]) {
+	allocword(0,0x030f1205,0,vocs);
+	vocs[0]->len=512;
+	vocs[0]=realloc(vocs[0],sizeof(struct hdr)+sizeof(struct hdr *[512]));
+	struct hdr **addrs=(struct hdr **)(vocs[0]->code);
+
+
+	allocword(0,5,0,addrs); //e
+	allocword(1,0x090e0914,0,addrs); //init
+	allocword(2,0x0d01090e,0,addrs); //main
+	find(fromascii(0x7b),0,addrs);
+	find(fromascii(0x7d),0,addrs);
+	find(fromascii(0x2e),0,addrs);
 	if(argc>1) { savename=argv[1]; }
-	load(); dump();
+	load(); dump(addrs);
 	soreload();
-	compile();
+	compile(addrs);
 
 	llsp--;
 
 	llcall(caddrs[1]);
 	for(;;) {
 		if(need_compile) {
-			compile(); dump(); need_compile=0;
+			compile(addrs); dump(addrs); need_compile=0;
 		}
 		llcall(caddrs[2]);
 	}
