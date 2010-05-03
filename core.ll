@@ -37,3 +37,8 @@ draw:">0?,={,,.} "> 1cmpb,={10shr ~drawname cursor>FFFF0000and80+cursor< drawdef
 drawname:8+"> 1B~cmpb~,_{3advance} dc dc dc dc dc dc dc dc, 8+"> dc dc dc dc dc dc dc dc, 8+
 dc:8rol"FFand={,.}drawchar
 drawdef:">FFFFand={,,.} 3shl addrs+> drawname, 2+ drawdef
+
+
+test|
+testw:1 2 3
+

@@ -91,7 +91,7 @@ int find0(uint64_t w, uint64_t pre, struct hdr **cd) {
 	int n;
 	for(n=0;n<512-(pre?1:0);n++) {
 		struct hdr *h=cd[n];
-		if(!h) { return -n; }
+		if(!h) { return -(n+1); }
 		if(pre) { if(h->name[0]==pre&&h->name[1]==w) break; }
 		else { if(h->name[0]==w) break; }
 	}
@@ -110,7 +110,7 @@ void allocword(int n,uint64_t w, uint64_t pre,struct hdr **cd) {
 int find(uint64_t w, uint64_t pre, struct hdr **cd) {
 	int n=find0(w,pre,cd);
 	if(n<1) {
-		n=-n;
+		n=(-n)-1;
 		allocword(n,w,pre,cd);
 	}
 	return n;
@@ -126,7 +126,6 @@ void fdump(FILE *f, uint8_t *a, int l) {
 static void append(int cw, uint16_t n, struct hdr **cd) {
 	struct hdr *h=cd[cw];
 	uint32_t nlen=h->len+2;
-	printf("nlen %u [%u]\n",nlen,n);
 	nlen=(nlen&0xfffffff8)+8;
 	h=cd[cw]=realloc(h,nlen+sizeof(struct hdr));
 	uint16_t *a=(uint16_t *) (h->len + (uint8_t*)(h->code));
@@ -149,7 +148,7 @@ uint64_t unhex(uint8_t x) {
 	return x-27;
 }
 
-void dump(struct hdr **);
+void dump();
 
 
 void load() {
@@ -165,6 +164,7 @@ void load() {
 		if(n<=0) break;
 		e=p+n;
 		for(;p<e;p++) {
+			putchar(*p); putchar('\n');
 			if(*p==':') {
 				if(tp!=':') {
 					cw=find(nm,pre,cd); cd[cw]->type=FORTH; nm=' '; pre=0; tp=':';
@@ -174,13 +174,16 @@ void load() {
 				continue;
 			} else if(*p=='|') {
 				cw=find(nm,pre,vocs);  nm=' '; pre=0; tp=':';
+				printf("new dict!");
 				if(vocs[cw]->type!=DICT) {
 					vocs[cw]->type=DICT;
-					vocs[cw]->len=512;
+					vocs[cw]->len=sizeof(struct hdr *[512]);
 					vocs[cw]=realloc(vocs[cw],sizeof(struct hdr)+sizeof(struct hdr *[512]));
 					cd=(struct hdr **)(vocs[cw]->code);
+					memset(cd,0,vocs[cw]->len);
 					cn=cw;
 				}
+				continue;
 			}
 
 
@@ -195,7 +198,7 @@ void load() {
 						int n=find0(nm,pre,cd);
 						if(n<0) {
 							int n2=find0(nm,pre,(struct hdr **)(vocs[0]->code));
-							if(n2<0) { n=-n; allocword(n,nm,pre,cd); n=(cn<<9)|n;  }
+							if(n2<0) { n=(-n)-1; allocword(n,nm,pre,cd); n=(cn<<9)|n;  }
 							else { n=n2; }
 						}
 						append(cw,n,cd);
@@ -212,7 +215,6 @@ void load() {
 		
 	}
 	close(f);
-	dump((struct hdr **)(vocs[0]->code));
 	return;
 }
 
@@ -359,14 +361,13 @@ void compile(struct hdr **addrs) {
 }
 #endif
 
-void dump(struct hdr **addrs) {
-	printf("\n=== dump ===\n");
+void dump1(struct hdr **addrs,int cn) {
 	int i;
 	for(i=0;i<512;i++) {
 		struct hdr *h=addrs[i];
 		if(!h) continue;
 		uint64_t nm=h->name[0];
-		print_name(i);
+		print_name(i|cn);
 		printf(":(%c%x) ","UFIDAE"[h->type],i);
 		switch(h->type) {
 		case FORTH: {
@@ -386,6 +387,20 @@ void dump(struct hdr **addrs) {
 		if(nm>>56) i++;
 	}
 	printf("%ld\n",*llsp);
+}
+
+void dump() {
+	printf("\n=== dump ===\n");
+	int i;
+	for(i=0;i<128;i++) {
+		struct hdr *h=vocs[i];
+		if(!h) break;
+		printf("VOC%d: ",i);
+		print_nm(h->name[0]);
+		print_nm(h->name[1]);
+		printf("\n");
+		dump1((struct hdr **)(h->code),i<<9);
+	}
 }
 
 
@@ -420,7 +435,7 @@ uint64_t llkick(uint64_t f) {
 	switch(f){
 	//case 0: save(); return 0;
 	case 1: load(); return 0;
-	case 2: dump((struct hdr **)(vocs[0]->code)); return 0;
+	case 2: dump(); return 0;
 	case 3: soreload(); return 0;
 	case 4: need_compile=1; return 0;
 	default:
@@ -434,6 +449,8 @@ struct hdr **getcore() {
 }
 
 int main(int argc,char *argv[]) {
+	memset(vocs,0,sizeof(vocs));
+
 	allocword(0,0x030f1205,0,vocs);
 	vocs[0]->len=512;
 	vocs[0]=realloc(vocs[0],sizeof(struct hdr)+sizeof(struct hdr *[512]));
@@ -447,7 +464,7 @@ int main(int argc,char *argv[]) {
 	find(fromascii(0x7d),0,addrs);
 	find(fromascii(0x2e),0,addrs);
 	if(argc>1) { savename=argv[1]; }
-	load(); dump(addrs);
+	load(); dump();
 	soreload();
 	compile(addrs);
 
