@@ -1,4 +1,4 @@
-main:301#,302#,80008cursor< addrs draw
+main:301#,302#,80008cursor< addrs draw@editor
 char:104#,
 dot:102#,
 ?::48 39 06
@@ -29,6 +29,7 @@ cmpb::3A 06
 storeb::8A 0E 88 08 48 AD 48 AD
 init:300#,
 
+editor|
 color:304#,
 cursor:::00 00 00 00 00 00 00 00
 drawchar:cursor>~303#1+advance

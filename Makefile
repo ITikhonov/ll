@@ -2,7 +2,7 @@ CFLAGS=-g -fPIC -Wall -DGL_GLEXT_PROTOTYPES
 LDFLAGS=-ldl -Wl,--export-dynamic -lGL -lGLU -lSDL
 ASFLAGS=-g
 
-all: ll kick.so state.ll test_opengl
+all: ll kick.so state.ll test_opengl  loader
 
 ll: ll.o ll-i64.o
 
