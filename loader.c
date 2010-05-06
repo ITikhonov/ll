@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "common.h"
+
 static int fromascii(char c) {
 	switch(c){
 	case 'a' ... 'z': return (c-'a')+1;
@@ -39,20 +41,19 @@ static char fromintr(uint8_t c) {
 	return " abcdefghijklmnopqrstuvwxyz0123456789ABCDEF.,\"^~?=_{}:@#<>+-"[c];
 }
 
-struct atom { uint64_t name[2]; } atoms[1024];
+struct atom atoms[1024];
 
-struct dict { uint16_t *def[512]; } dict;
-
+struct dict dict;
 
 int atom2idx(int16_t a, struct dict *d) {
 	uint16_t **p=d->def;
 	for(;*p;p++) {
-		if((**p)==a) return p-d->def;
+		if((*p)[2]==a) return p-d->def;
 	}
 	return 0x10000+(p-d->def);
 }
 
-int makeatom(pre,nm) {
+int makeatom(uint64_t pre,uint64_t nm) {
 	struct atom *p=atoms;
 	for(;p->name[1];p++) {
 		if(p->name[0]==pre && p->name[1]==nm) {
@@ -66,6 +67,8 @@ int makeatom(pre,nm) {
 static uint64_t unhex(uint8_t x) {
         return x-27;
 }
+
+
 
 
 void load() {
@@ -85,6 +88,10 @@ void load() {
 			if(*p==':') {
 				if(tp!=':') {
 					uint16_t a=makeatom(pre,nm);
+					printf("ATOM %d:",a);
+					print_nm(pre);
+					print_nm(nm);
+					printf("\n");
 					int idx=atom2idx(a,d)&0xFFFF;
 					pdef=d->def+idx;
 					def=*pdef=realloc(*pdef,8);
@@ -100,7 +107,7 @@ void load() {
 				def=dict.def[idx]=realloc(dict.def[idx],8+sizeof(struct dict));
 				memset(def+4,0,sizeof(struct dict));
 				def[0]=sizeof(struct dict); def[1]=makeatom(0,0x04090314); def[2]=a; 
-				d=(struct dict *)(def+8);
+				d=(struct dict *)(def+4);
 				def=0;
 				
 				nm=0; pre=0; tp=':';
@@ -140,10 +147,11 @@ void load() {
 	return;
 }
 
-
-
 int main() {
 	load();
+
+	dump(&dict);
+
 	return 0;
 }
 
