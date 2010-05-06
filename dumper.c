@@ -2,16 +2,6 @@
 
 #include "common.h"
 
-static char fromintr(uint8_t c) {
-        return " abcdefghijklmnopqrstuvwxyz0123456789ABCDEF.,\"^~?=_{}:@#<>+-"[c];
-}
-
-void pc(char s) { if(s) putchar(s?fromintr(s):'_'); }
-
-void print_nm(uint64_t nm) {
-        char *v=((char*)&nm)+7; pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);
-}
-
 void dump(struct dict *d) {
         uint16_t **p=d->def;
         for(;*p;p++) {

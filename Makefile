@@ -4,7 +4,7 @@ ASFLAGS=-g
 
 all: ll kick.so state.ll test_opengl loader
 
-loader: loader.o dumper.o
+loader: loader.o dumper.o common.o
 
 ll: ll.o ll-i64.o
 
