@@ -73,3 +73,9 @@ void print_nm(uint64_t nm) {
         char *v=((char*)&nm)+7; pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);
 }
 
+void hexdump(uint8_t *a, int l) {
+        while(l--) {
+                printf(" %02x", *a++);
+        }
+}
+

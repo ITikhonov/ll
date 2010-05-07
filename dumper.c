@@ -9,7 +9,12 @@ void dump(struct dict *d) {
 		printf("%2ld: ",p-d->def);
 		print_nm(atoms[def[2]].name[0]);
 		print_nm(atoms[def[2]].name[1]);
-		if(def[1]==makeatom(0,0x060f121408)) {
+		putchar(' ');
+		putchar('[');
+		print_nm(atoms[def[1]].name[0]);
+		print_nm(atoms[def[1]].name[1]);
+		putchar(']');
+		if(def[1]==makeatom(0,0x060f121408LL)) {
 			uint16_t *p=def+4;
 			uint16_t *e=p+def[0]/2;
 			for(;p<e;p++) {
@@ -21,6 +26,8 @@ void dump(struct dict *d) {
 			printf(" DICT\n");
 			uint16_t *def=*p;
 			dump((struct dict *)(def+4));
+		} else {
+			hexdump((uint8_t*)(def+4),def[0]);
 		}
 		putchar('\n');
         }
