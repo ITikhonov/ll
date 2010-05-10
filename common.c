@@ -64,7 +64,20 @@ uint64_t unhex(uint8_t x) {
         return x-27;
 }
 
+uint64_t make_num(uint16_t a) {
+        struct atom *h=atoms+a;
+        uint64_t nm=h->name[0];
+        uint64_t w=0;
+        int i;
 
+        for(i=0;i<32&&nm;i+=4) { w|=unhex(nm&0xff)<<i; nm>>=8; }
+        if(i==32) {
+                uint64_t pre=w; w=0; nm=h->name[1];
+                for(i=0;i<32&&nm;i+=4) { w|=unhex(nm&0xff)<<i; nm>>=8; }
+                w|=pre<<i;
+        }
+        return w;
+}
 
 
 static void pc(char s) { if(s) putchar(s?fromintr(s):'_'); }
@@ -78,4 +91,6 @@ void hexdump(uint8_t *a, int l) {
                 printf(" %02x", *a++);
         }
 }
+
+
 
