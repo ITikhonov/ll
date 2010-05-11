@@ -75,6 +75,15 @@ static uint8_t *compile_number(uint8_t *pc, uint64_t n) {
 	return pc;
 }
 
+static uint8_t *compile_inline(uint8_t *pc, uint16_t *def) {
+	memcpy(pc,def+4,def[0]);
+	return pc+def[0];
+}
+
+static uint8_t *compile_data(uint8_t *pc, uint16_t *def) {
+	return compile_number(pc,(uint64_t)(def+4));
+}
+
 static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t dn) {
 	struct caddr *c=atom2caddr(dn,def[2]);
 	c->c=pc;
@@ -143,11 +152,22 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 			}
 			if(sdef[1]==makeatom(0,0x060f121408LL)) { // forth
 				pc=compile_forth(pc,p,dn);
-			}
+			} else if(sdef[1]==makeatom(0,0x090e0c090e05LL)) { // inline
+				pc=compile_inline(pc,sdef);
+			} else if(sdef[1]==makeatom(0,0x04011401)) { // data
+				pc=compile_data(pc,sdef);
+			} else {
+				printf("unknown type ");
+				print_atom(sdef[1]);
+				printf("\n");
+				abort();
+			} 
 		} break;
 		}
 	}
+	*pc++=0xc3;
 	c->len=pc-c->c;
+	printf("%p -> %p",c->c,pc);
 	hexdump(c->c,c->len);
 	return pc;
 }
