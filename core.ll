@@ -1,4 +1,5 @@
-main:301#,302#,80008cursor@editor< 7 drawchar@editor
+main:61 102#,
+maina:301#,302#,80008cursor@editor< 7 drawchar@editor
 char:104#,
 dot:102#,
 ?::48 39 06
