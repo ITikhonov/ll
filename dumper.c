@@ -8,6 +8,7 @@ void dump(struct dict *d) {
 		uint16_t *def=*p;
 		printf("%2ld: ",p-d->def);
 		print_atom(def[2]);
+		printf("(%hu)",def[2]);
 		putchar(' ');
 		putchar('[');
 		print_atom(def[1]);
@@ -17,6 +18,7 @@ void dump(struct dict *d) {
 			uint16_t *e=p+def[0]/2;
 			for(;p<e;p++) {
 				print_atom(*p);
+				printf("(%hu)",*p);
 				putchar(' ');
 			}
 		} else if(def[1]==makeatom(0,0x04090314)) {
