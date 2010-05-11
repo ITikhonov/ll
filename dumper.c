@@ -7,19 +7,16 @@ void dump(struct dict *d) {
         for(;*p;p++) {
 		uint16_t *def=*p;
 		printf("%2ld: ",p-d->def);
-		print_nm(atoms[def[2]].name[0]);
-		print_nm(atoms[def[2]].name[1]);
+		print_atom(def[2]);
 		putchar(' ');
 		putchar('[');
-		print_nm(atoms[def[1]].name[0]);
-		print_nm(atoms[def[1]].name[1]);
+		print_atom(def[1]);
 		putchar(']');
 		if(def[1]==makeatom(0,0x060f121408LL)) {
 			uint16_t *p=def+4;
 			uint16_t *e=p+def[0]/2;
 			for(;p<e;p++) {
-				print_nm(atoms[*p].name[0]);
-				print_nm(atoms[*p].name[1]);
+				print_atom(*p);
 				putchar(' ');
 			}
 		} else if(def[1]==makeatom(0,0x04090314)) {
