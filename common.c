@@ -75,14 +75,15 @@ uint64_t make_num(uint16_t a) {
         struct atom *h=atoms+a;
         uint64_t nm=h->name[0];
         uint64_t w=0;
-        int i;
 
-        for(i=0;i<32&&nm;i+=4) { w|=unhex(nm&0xff)<<i; nm>>=8; }
-        if(i==32) {
-                uint64_t pre=w; w=0; nm=h->name[1];
-                for(i=0;i<32&&nm;i+=4) { w|=unhex(nm&0xff)<<i; nm>>=8; }
-                w|=pre<<i;
-        }
+	while(nm) { w<<=4; w|=unhex(nm>>56); nm<<=8; }
+
+        nm=h->name[1];
+	if(nm) {
+		while(!(nm>>56)) { nm<<=8; }
+		while(nm) { w<<=4; w|=unhex(nm>>56); nm<<=8; }
+	}
+
         return w;
 }
 

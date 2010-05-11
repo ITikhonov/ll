@@ -32,7 +32,7 @@ static uint8_t *compile_kick(uint8_t *p, uint64_t n) {
 static void backref(struct caddr *c, int32_t *o) {
 	struct back *p=backs,*e=backs+1024;
 	for(;p<e;p++) {
-		if(!p->o) { p->o=o; p->c=c-caddrs; return; }
+		if(!p->o) { printf("#%lu",p-backs); p->o=o; p->c=c-caddrs; return; }
 	}
 	abort();
 }
@@ -42,6 +42,8 @@ static void backrefs(struct caddr *c) {
 	struct back *p=backs,*e=backs+1024;
 	for(;p<e;p++) {
 		if(p->c==i&&p->o) {
+			printf("resolving backref %lu for #%u\n",p-backs,i);
+
 			uint8_t *pp=(uint8_t *)(p->o+1);
 			*(p->o)=(uint32_t)(caddrs[p->c].c-pp);
 			p->o=0;
@@ -49,22 +51,39 @@ static void backrefs(struct caddr *c) {
 	}
 }
 
+static void checkbackrefs() {
+	struct back *p=backs,*e=backs+1024;
+	for(;p<e;p++) {
+		if(p->o) {
+			printf("unresolved backref %hu to %lu\n", p->c, ((uint8_t*)p->o)-comp);
+			abort();
+		}
+	}
+}
+
 static struct caddr *atom2caddr(uint16_t d, uint16_t a) {
 	struct caddr *p=caddrs;
-	for(;p->c;p++) {
-		if(p->dict==d&&p->word==a) return p;
+	for(;p->len!=0;p++) {
+		if(p->dict==d&&p->word==a) return p; 
 	}
-	p->dict=d; p->word=a;
+	p->dict=d; p->word=a; p->len=-1;
 	return p;
 }
 
-static uint8_t *compile_forth(uint8_t *pc,uint16_t *p, uint16_t dn) {
-	struct caddr *c=atom2caddr(dn,*p);
+static uint8_t *compile_forth(uint8_t *pc,uint16_t w, uint16_t dn) {
+	struct caddr *c=atom2caddr(dn,w);
 	*pc++=0xe8;
 	int32_t *o=(int32_t*)pc;
 	pc+=4;
 	if(c->c) { *o=c->c-pc; }
-	else { backref(c,o); }
+	else {
+		printf("\nbackref for %lu (%hu,%hu) ",c-caddrs,dn,w);
+		print_atom(w);
+		printf(" @ ");
+		print_atom(dn);
+		backref(c,o);
+		printf("to %lx\n",o);
+	}
 	return pc;
 }
 
@@ -86,6 +105,7 @@ static uint8_t *compile_data(uint8_t *pc, uint16_t *def) {
 
 static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t dn) {
 	struct caddr *c=atom2caddr(dn,def[2]);
+	printf("(atom2caddr(%hu,%hu)=%lu)\n",dn,def[2],c-caddrs);
 	c->c=pc;
 	backrefs(c);
 	int32_t *lbacks[16], **lback=lbacks;
@@ -94,10 +114,13 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 	int l=def[0]/sizeof(uint16_t);
 	for(;l--;p++) {
 		struct atom *a=atoms+*p;
+		uint8_t *bc=pc;
+		print_atom(*p);
 
 		switch(a->name[1]&0xff) {
 		case 27 ... 42: { // number
 			uint64_t n=make_num(*p);
+			printf("NUMBER(%lx)",n);
 			if(l&&p[1]==makeatom(0,0x37)) { // #
 				pc=compile_kick(pc,n); p++; l--;
 			} else {
@@ -105,9 +128,11 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 			}
 		} break;
 		default: {
-			uint16_t *sdef;
+			uint16_t ww,wdn,*sdef;
 			if(l>1&&p[1]==makeatom(0,0x36)) { // @
 				int idx;
+				ww=*p;
+				wdn=p[2];
 				idx=atom2idx(p[2],&dict);
 				if(0x10000&idx) {
 					printf("unknown dict");
@@ -130,17 +155,20 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 			} else if(*p==makeatom(0,0x33)) { // {
 				*lback++=(int32_t*)pc;
 				pc+=4;
+				continue;
 			} else if(*p==makeatom(0,0x34)) { // }
 				lback--;
 				**lback=pc-(((uint8_t*)(*lback))+4);
+				continue;
 			} else {
 				int idx=atom2idx(*p,d);
+				ww=*p; wdn=dn;
 				if(0x10000&idx) {
 					idx=atom2idx(*p,&dict);
+					wdn=makeatom(0,0x030f1205);
 					if(0x10000&idx) {
 						printf("unknown word");
-						print_nm(atoms[*p].name[0]);
-						print_nm(atoms[*p].name[1]);
+						print_atom(*p);
 						printf("\n");
 						abort();
 
@@ -151,7 +179,7 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 				}
 			}
 			if(sdef[1]==makeatom(0,0x060f121408LL)) { // forth
-				pc=compile_forth(pc,p,dn);
+				pc=compile_forth(pc,ww,wdn);
 			} else if(sdef[1]==makeatom(0,0x090e0c090e05LL)) { // inline
 				pc=compile_inline(pc,sdef);
 			} else if(sdef[1]==makeatom(0,0x04011401)) { // data
@@ -164,6 +192,8 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 			} 
 		} break;
 		}
+
+		putchar('['); hexdump(bc,pc-bc); putchar(']');
 	}
 	*pc++=0xc3;
 	c->len=pc-c->c;
@@ -197,7 +227,9 @@ static uint8_t *compile1(struct dict *d, uint16_t dn, uint8_t *pc) {
 void compile() {
 	memset(comp,0,sizeof(comp));
 	memset(caddrs,0,sizeof(caddrs));
+	memset(backs,0,sizeof(backs));
 	compile1(&dict,makeatom(0,0x030f1205),comp);
+	checkbackrefs();
 }
 
 extern void llcall(void *p);
