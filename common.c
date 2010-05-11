@@ -86,6 +86,11 @@ void print_nm(uint64_t nm) {
         char *v=((char*)&nm)+7; pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);pc(*v--);
 }
 
+void print_atom(uint16_t a) {
+	print_nm(atoms[a].name[0]);
+	print_nm(atoms[a].name[1]);
+}
+
 void hexdump(uint8_t *a, int l) {
         while(l--) {
                 printf(" %02x", *a++);
