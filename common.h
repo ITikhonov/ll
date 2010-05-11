@@ -17,4 +17,4 @@ void print_atom(uint16_t);
 int atom2idx(int16_t a, struct dict *d);
 int makeatom(uint64_t pre,uint64_t nm);
 
-
+void forthcall(uint16_t a, uint16_t d);

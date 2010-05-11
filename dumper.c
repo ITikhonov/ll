@@ -2,7 +2,7 @@
 
 #include "common.h"
 
-void dump(struct dict *d) {
+static void dump1(struct dict *d) {
         uint16_t **p=d->def;
         for(;*p;p++) {
 		uint16_t *def=*p;
@@ -24,7 +24,7 @@ void dump(struct dict *d) {
 		} else if(def[1]==makeatom(0,0x04090314)) {
 			printf(" DICT\n");
 			uint16_t *def=*p;
-			dump((struct dict *)(def+4));
+			dump1((struct dict *)(def+4));
 		} else {
 			hexdump((uint8_t*)(def+4),def[0]);
 		}
@@ -32,3 +32,6 @@ void dump(struct dict *d) {
         }
 }
 
+void dump() {
+	dump1(&dict);
+}

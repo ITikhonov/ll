@@ -91,12 +91,4 @@ void load() {
 	return;
 }
 
-int main() {
-	load();
-
-	dump(&dict);
-	compile();
-
-	return 0;
-}
 

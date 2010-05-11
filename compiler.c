@@ -4,7 +4,7 @@
 #include "common.h"
 
 extern uint64_t *llsp;
-uint64_t llkick(uint64_t f) { return 0; }
+uint64_t llkick(uint64_t f);
 
 static uint8_t comp[65535];
 static struct caddr {uint16_t dict,word; uint8_t *c; int len; } caddrs[1024];
@@ -49,7 +49,7 @@ static void backrefs(struct caddr *c) {
 	}
 }
 
-struct caddr *atom2caddr(uint16_t d, uint16_t a) {
+static struct caddr *atom2caddr(uint16_t d, uint16_t a) {
 	struct caddr *p=caddrs;
 	for(;p->c;p++) {
 		if(p->dict==d&&p->word==a) return p;
@@ -134,6 +134,7 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 						print_nm(atoms[*p].name[1]);
 						printf("\n");
 						abort();
+
 					}
 					sdef=dict.def[idx];
 				} else {
@@ -151,7 +152,7 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 	return pc;
 }
 
-uint8_t *compile1(struct dict *d, uint16_t dn, uint8_t *pc) {
+static uint8_t *compile1(struct dict *d, uint16_t dn, uint8_t *pc) {
         uint16_t **p=d->def;
         for(;*p;p++) {
 		uint16_t *def=*p;
@@ -177,5 +178,20 @@ void compile() {
 	memset(comp,0,sizeof(comp));
 	memset(caddrs,0,sizeof(caddrs));
 	compile1(&dict,makeatom(0,0x030f1205),comp);
+}
+
+extern void llcall(void *p);
+
+void forthcall(uint16_t a, uint16_t d) {
+	struct caddr *c=atom2caddr(d,a);
+	if(!c->c) {
+		printf("no code address for");
+		print_atom(a);
+		printf(" @ ");
+		print_atom(d);
+		printf("\n");
+		abort();
+	}
+	llcall(c->c);
 }
 
