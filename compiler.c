@@ -125,6 +125,12 @@ static uint8_t *compile_data(uint8_t *pc, uint16_t *def) {
 	return compile_number(pc,(uint64_t)(def+4));
 }
 
+static int number(uint16_t a) {
+	switch(atoms[a].name[0]&0xff) { case 27 ... 42: return 1; }
+	switch(atoms[a].name[1]&0xff) { case 27 ... 42: return 1; }
+	return 0;
+}
+
 static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t dn) {
 	struct caddr *c=atom2caddr(dn,def[2]);
 #ifdef DEBUG
@@ -137,14 +143,18 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 	uint16_t *p=def+4;
 	int l=def[0]/sizeof(uint16_t);
 	for(;l--;p++) {
-		struct atom *a=atoms+*p;
 #ifdef DEBUG
 		uint8_t *bc=pc;
 		print_atom(*p);
 #endif
 
-		switch(a->name[1]&0xff) {
-		case 27 ... 42: { // number
+		if(l&&p[1]==makeatom(0,0x3c)) {
+			pc=compile_number(pc,*p);
+			l--; p++;
+			continue;
+		}
+
+		if(number(*p)) {
 			uint64_t n=make_num(*p);
 #ifdef DEBUG
 			printf("NUMBER(%lx)",n);
@@ -154,8 +164,7 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 			} else {
 				pc=compile_number(pc,n);
 			}
-		} break;
-		default: {
+		} else {
 			uint16_t ww,wdn,*sdef;
 			if(l>1&&p[1]==makeatom(0,0x36)) { // @
 				int idx;
@@ -218,7 +227,6 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 				printf("\n");
 				abort();
 			} 
-		} break;
 		}
 #ifdef DEBUG
 		putchar('['); hexdump(bc,pc-bc); putchar(']');

@@ -52,7 +52,8 @@ uint64_t llkick(uint64_t f) {
 	case 0x2: dump(&dict); return 0;
 	case 0x3: soreload(); return 0;
 	case 0x4: need_compile=1; return 0;
-	case 0x10: return (uint64_t)(&dict);
+	case 0x10: return (uint64_t)(dict.def);
+	case 0x11: return (uint64_t)(atoms);
 	default:
 		if(kick_so) return kick_so(f);
 	}

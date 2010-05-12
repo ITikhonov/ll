@@ -29,6 +29,7 @@ int fromascii(char c) {
 	case '>': return 57;
 	case '+': return 58;
 	case '-': return 59;
+	case '$': return 60;
 	case ' ':
 	case '\n': return 0;
 	default:

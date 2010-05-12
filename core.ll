@@ -1,4 +1,4 @@
-main:301#,302#,80008cursor@editor< 80010 8 303#, 7 drawchar@editor
+main:301#,302#,80008cursor@editor< 80010 8 303#, 7 drawchar@editor dict dot dict$ dot atoms dot
 char:104#,
 dot:102#,
 ?::48 39 06
@@ -21,7 +21,8 @@ rolb::48 C1 C0 08
 shl::88 C1 48 D3 26 48 AD
 shr::88 C1 48 D3 2E 48 AD
 -::48 29 06 48 AD
-addrs:201#
+dict:10#
+atoms:11#
 +::48 01 06 48 AD
 realloc:204#
 compile:4#,
