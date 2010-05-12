@@ -4,9 +4,14 @@ ASFLAGS=-g
 
 all: ll kick.so state.ll test_opengl
 
-loader: loader.o dumper.o common.o compiler.o ll-i64.o
-
 ll: ll.o ll-i64.o loader.o dumper.o common.o compiler.o
+
+ll.o: common.h
+loader.o: common.h
+dumper.o: common.h
+common.o: common.h
+compiler.o: common.h
+kick.o: common.h
 
 kick.o: CFLAGS=-rdynamic -fPIC
 

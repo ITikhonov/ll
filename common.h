@@ -1,7 +1,10 @@
 #include <stdint.h>
 
-extern struct dict { uint16_t *def[512]; } dict;
-extern struct atom { uint64_t name[2]; } atoms[1024];
+struct dict { uint16_t *def[512]; } __attribute__((__packed__));
+extern struct dict dict;
+
+struct atom { uint64_t name[2]; } __attribute__((__packed__));
+extern struct atom atoms[1024];
 
 
 int fromascii(char c);
