@@ -48,10 +48,10 @@ int need_compile=0;
 
 uint64_t llkick(uint64_t f) {
 	switch(f){
-	case 1: load(); return 0;
-	case 2: dump(&dict); return 0;
-	case 3: soreload(); return 0;
-	case 4: need_compile=1; return 0;
+	case 0x1: load(); return 0;
+	case 0x2: dump(&dict); return 0;
+	case 0x3: soreload(); return 0;
+	case 0x4: need_compile=1; return 0;
 	case 0x10: return (uint64_t)(&dict);
 	default:
 		if(kick_so) return kick_so(f);
