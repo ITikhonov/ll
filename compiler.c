@@ -13,6 +13,8 @@ static struct back {uint16_t c; int32_t *o; } backs[1024];
 static uint8_t dup_code[7]={0x48, 0x8d, 0x76, 0xf8, 0x48, 0x89, 0x06};
 
 static uint8_t *compile_kick(uint8_t *p, uint64_t n) {
+	// push rbx
+	*p++=0x53;
 	memcpy(p,dup_code,7); p+=7;
 	// mov    %rsi,llsp
 	*p++=0x48; *p++=0x89; *p++=0x34; *p++=0x25;
@@ -26,6 +28,8 @@ static uint8_t *compile_kick(uint8_t *p, uint64_t n) {
 	// movq $llsp,%rsi
 	*p++=0x48; *p++=0x8b; *p++=0x34; *p++=0x25;
 	*(uint32_t*)p=(uint32_t)(uint64_t)(&llsp); p+=4;
+	// pop rbx
+	*p++=0x5b;
 	return p;
 }
 

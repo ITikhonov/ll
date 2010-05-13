@@ -13,11 +13,13 @@ llsp:
 
 .text
 llcall:
+	pushq	%rbx
 	movq	llsp,%rsi
 	lodsq
 	call	*%rdi
 	leaq	-8(%rsi),%rsi
 	movq	%rax,(%rsi)
 	movq	%rsi,llsp
+	popq	%rbx
 	ret
 

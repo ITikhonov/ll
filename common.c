@@ -23,13 +23,16 @@ int fromascii(char c) {
 	case '{': return 51;
 	case '}': return 52;
 	case ':': return 53;
-	case '@': return 54;
+	case '\\': return 54;
 	case '#': return 55;
 	case '<': return 56;
 	case '>': return 57;
 	case '+': return 58;
 	case '-': return 59;
 	case '$': return 60;
+	case '!': return 61;
+	case '@': return 62;
+	case '%': return 63;
 	case ' ':
 	case '\n': return 0;
 	default:
@@ -39,7 +42,7 @@ int fromascii(char c) {
 }
 
 char fromintr(uint8_t c) {
-	return " abcdefghijklmnopqrstuvwxyz0123456789ABCDEF.,\"^~?=_{}:@#<>+-"[c];
+	return " abcdefghijklmnopqrstuvwxyz0123456789ABCDEF.,\"^~?=_{}:\\#<>+-$!@%"[c];
 }
 
 int atom2idx(int16_t a, struct dict *d) {

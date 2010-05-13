@@ -1,4 +1,4 @@
-main:301#,302#,80008cursor@draw< dict list@draw
+main:301#,302#,80008cursor\draw< dict list\draw
 char:104#,
 cr:Achar
 dot:102#,
@@ -25,11 +25,15 @@ shr::88 C1 48 D3 2E 48 AD
 dict:10#
 atoms:11#
 +::48 01 06 48 AD
+!::48 89 C3 48 AD
+@::48 8D 76 F8 48 89 06 48 89 D8
+%::48 01 C3 48 AD
 realloc:204#
 compile:4#,
 cmpb::3A 06
 storeb::8A 0E 88 08 48 AD 48 AD
 init:300#,
+find:@>0?,={,,0.} >20shrFFFFand ?,={,@.} 8%find
 
 draw|
 color:304#,
