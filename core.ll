@@ -1,5 +1,6 @@
-main:301#,302#,80008cursor@editor< 80010 8 303#, 7 drawchar@editor dict dot dict$ dot atoms dot
+main:301#,302#,80008cursor@draw< dict list@draw
 char:104#,
+cr:Achar
 dot:102#,
 ?::48 39 06
 .::C3
@@ -30,9 +31,18 @@ cmpb::3A 06
 storeb::8A 0E 88 08 48 AD 48 AD
 init:300#,
 
-editor|
+draw|
 color:304#,
 cursor:::00 00 00 00 00 00 00 00
-drawchar:cursor>~303#1+advance
+char:cursor>~303#1+advance
 advance:cursor>+cursor<
+atom:4shl atoms+">nm 8+>nm
+dc:8rol"FFand={,.}char
+nm:dc dc dc dc dc dc dc dc,
+name:20shrFFFFand atom 
+def:?={,,.} ^>FFFFand atom ~2+~def
+forth:~8+~^+def
+word:" >"name "FFFFand ~10shrFFFFand forth$?,={,forth.},,,
+line:cursor>100000+FFFF0000and8+cursor<
+list:">0?,={,,.}word line 8+list
 
