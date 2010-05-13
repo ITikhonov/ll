@@ -40,9 +40,10 @@ atom:4shl atoms+">nm 8+>nm
 dc:8rol"FFand={,.}char
 nm:dc dc dc dc dc dc dc dc,
 name:20shrFFFFand atom 
-def:?={,,.} ^>FFFFand atom ~2+~def
+def:?={,,.} ^>FFFFand atom 3advance ~2+~def
 forth:~8+~^+def
-word:" >"name "FFFFand ~10shrFFFFand forth$?,={,forth.},,,
+word:" >"name 40x "FFFFand ~10shrFFFFand forth$?,={,forth.},,,
 line:cursor>100000+FFFF0000and8+cursor<
 list:">0?,={,,.}word line 8+list
+x:cursor>FFFF0000and+cursor<
 
