@@ -12,7 +12,7 @@ void load() {
 	if(f<0) return;
 	uint64_t nm=' ',pre=0;
 	int tp=' ',tc=0;
-	struct dict *d=&dict;
+	struct dict *d=dict;
 	uint16_t *def=0, **pdef=0;
 	uint16_t types[4]={makeatom(0,0x060f121408LL),makeatom(0,0x090e0c090e05LL),makeatom(0,0x04011401LL)};
 	int ct=0;
@@ -45,8 +45,8 @@ void load() {
 				continue;
 			} else if(*p=='|') {
 				uint16_t a=makeatom(pre,nm);
-				int idx=atom2idx(a,&dict)&0xFFFF;
-				def=dict.def[idx]=realloc(dict.def[idx],8+sizeof(struct dict));
+				int idx=atom2idx(a,dict)&0xFFFF;
+				def=dict->def[idx]=realloc(dict->def[idx],8+sizeof(struct dict));
 				memset(def+4,0,sizeof(struct dict));
 				def[0]=sizeof(struct dict); def[1]=makeatom(0,0x04090314LL); def[2]=a; def[3]=0;
 				d=(struct dict *)(def+4);

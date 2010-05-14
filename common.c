@@ -4,7 +4,7 @@
 
 #include "common.h"
 
-struct dict dict;
+struct dict *dict;
 struct atom atoms[1024];
 
 int fromascii(char c) {

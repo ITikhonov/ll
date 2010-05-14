@@ -52,7 +52,7 @@ uint64_t llkick(uint64_t f) {
 	case 0x2: dump(&dict); return 0;
 	case 0x3: soreload(); return 0;
 	case 0x4: need_compile=1; return 0;
-	case 0x10: return (uint64_t)(dict.def);
+	case 0x10: return (uint64_t)(dict->def);
 	case 0x11: return (uint64_t)(atoms);
 	default:
 		if(kick_so) return kick_so(f);
@@ -61,6 +61,15 @@ uint64_t llkick(uint64_t f) {
 }
 
 int main(int argc,char *argv[]) {
+	uint16_t *core=realloc(0,8+sizeof(struct dict));
+	memset(core,0,sizeof(struct dict)+8);
+	dict=(struct dict *)(core+4);
+	int idx=atom2idx(makeatom(0,0x030f1205),dict)&0xFFFF;
+	dict->def[idx]=core;
+	core[0]=sizeof(struct dict);
+	core[1]=makeatom(0,0x04090314LL);
+	core[2]=makeatom(0,0x030f1205);
+
 	load(); dump();
 	soreload();
 	compile();

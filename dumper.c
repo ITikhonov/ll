@@ -25,7 +25,9 @@ static void dump1(struct dict *d) {
 		} else if(def[1]==makeatom(0,0x04090314)) {
 			printf(" DICT\n");
 			uint16_t *def=*p;
-			dump1((struct dict *)(def+4));
+			if(d!=(struct dict *)(def+4)) {
+				dump1((struct dict *)(def+4));
+			}
 		} else {
 			hexdump((uint8_t*)(def+4),def[0]);
 		}
@@ -34,5 +36,5 @@ static void dump1(struct dict *d) {
 }
 
 void dump() {
-	dump1(&dict);
+	dump1(dict);
 }

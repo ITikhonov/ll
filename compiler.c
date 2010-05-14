@@ -174,7 +174,7 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 				int idx;
 				ww=*p;
 				wdn=p[2];
-				idx=atom2idx(p[2],&dict);
+				idx=atom2idx(p[2],dict);
 				if(0x10000&idx) {
 					printf("\nunknown dict ");
 					print_atom(p[2]);
@@ -183,7 +183,7 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 					printf("\n");
 					abort();
 				}
-				struct dict *d1=(struct dict *)(dict.def[idx]+4);
+				struct dict *d1=(struct dict *)(dict->def[idx]+4);
 				idx=atom2idx(*p,d1);
 				if(idx&0x10000) {
 					printf("unknown word ");
@@ -207,7 +207,7 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 				int idx=atom2idx(*p,d);
 				ww=*p; wdn=dn;
 				if(0x10000&idx) {
-					idx=atom2idx(*p,&dict);
+					idx=atom2idx(*p,dict);
 					wdn=makeatom(0,0x030f1205);
 					if(0x10000&idx) {
 						printf("unknown word");
@@ -216,7 +216,7 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 						abort();
 
 					}
-					sdef=dict.def[idx];
+					sdef=dict->def[idx];
 				} else {
 					sdef=d->def[idx];
 				}
@@ -268,7 +268,9 @@ static uint8_t *compile1(struct dict *d, uint16_t dn, uint8_t *pc) {
 			pc=compile_def(pc,def,d,dn);
 		} else if(def[1]==makeatom(0,0x04090314LL)) { // dict
 			uint16_t *def=*p;
-			pc=compile1((struct dict *)(def+4),def[2],pc);
+			if(d!=(struct dict *)(def+4)) {
+				pc=compile1((struct dict *)(def+4),def[2],pc);
+			}
 		}
         }
 	putchar(']');
@@ -281,7 +283,7 @@ void compile() {
 	memset(comp,0,sizeof(comp));
 	memset(caddrs,0,sizeof(caddrs));
 	memset(backs,0,sizeof(backs));
-	compile1(&dict,makeatom(0,0x030f1205),comp);
+	compile1(dict,makeatom(0,0x030f1205),comp);
 	checkbackrefs();
 	checkcaddrs();
 	printf("done.\n");
