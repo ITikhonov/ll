@@ -1,4 +1,4 @@
-main:301#,302#,80008cursor\draw< dict list\draw
+main:301#,302#,80008cursor\draw< draw$dict\draw
 char:104#,
 cr:Achar
 dot:102#,
@@ -50,4 +50,5 @@ word:" >"name 40x "FFFFand ~10shrFFFFand forth$?,={,forth.},,,
 line:cursor>100000+FFFF0000and8+cursor<
 list:">0?,={,,.}word line 8+list
 x:cursor>FFFF0000and+cursor<
+dict:dict\core!find>8+ list\draw
 

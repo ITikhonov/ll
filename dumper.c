@@ -13,6 +13,7 @@ static void dump1(struct dict *d) {
 		putchar('[');
 		print_atom(def[1]);
 		putchar(']');
+		printf("%p*",def);
 		if(def[1]==makeatom(0,0x060f121408LL)) {
 			uint16_t *p=def+4;
 			uint16_t *e=p+def[0]/2;

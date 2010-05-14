@@ -94,9 +94,9 @@ static struct caddr *atom2caddr(uint16_t d, uint16_t a) {
 	return p;
 }
 
-static uint8_t *compile_forth(uint8_t *pc,uint16_t w, uint16_t dn) {
+static uint8_t *compile_forth(uint8_t *pc,uint16_t w, uint16_t dn, int tailcall) {
 	struct caddr *c=atom2caddr(dn,w);
-	*pc++=0xe8;
+	*pc++=tailcall?0xe9:0xe8;
 	int32_t *o=(int32_t*)pc;
 	pc+=4;
 	if(c->c) { *o=c->c-pc; }
@@ -176,7 +176,9 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 				wdn=p[2];
 				idx=atom2idx(p[2],&dict);
 				if(0x10000&idx) {
-					printf("unknown dict");
+					printf("\nunknown dict ");
+					print_atom(p[2]);
+					printf(" for ");
 					print_atom(*p);
 					printf("\n");
 					abort();
@@ -220,7 +222,7 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 				}
 			}
 			if(sdef[1]==makeatom(0,0x060f121408LL)) { // forth
-				pc=compile_forth(pc,ww,wdn);
+				pc=compile_forth(pc,ww,wdn,(!l)||(p[1]==makeatom(0,0x2b)));
 			} else if(sdef[1]==makeatom(0,0x090e0c090e05LL)) { // inline
 				pc=compile_inline(pc,sdef);
 			} else if(sdef[1]==makeatom(0,0x04011401)) { // data
