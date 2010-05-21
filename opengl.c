@@ -9,6 +9,8 @@
 SDL_Surface *surface;
 SDL_Surface *fontsf;
 
+void key(int);
+
 void sdl_poll() {
     SDL_Event event;
     SDL_Flip(surface);
@@ -16,11 +18,17 @@ void sdl_poll() {
     while(SDL_PollEvent(&event)) {
 	    switch(event.type) {
 		case SDL_KEYDOWN:
-			SDL_Quit();
+			if(event.key.keysym.sym==SDLK_ESCAPE) {
+				SDL_Quit();
 #ifndef TEST
-			down();
+				down();
 #endif
-			exit(0);
+				exit(0);
+			}
+
+#ifndef TEST
+			key(event.key.keysym.sym);
+#endif
 		default:
 		    break;
 	    }

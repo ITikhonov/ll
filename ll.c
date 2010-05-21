@@ -19,6 +19,7 @@ void dump();
 void compile();
 
 
+
 void *dl=0;
 uint64_t (*kick_so)(uint64_t f)=0;
 
@@ -58,6 +59,11 @@ uint64_t llkick(uint64_t f) {
 		if(kick_so) return kick_so(f);
 	}
 	return 0;
+}
+
+int key(int c) {
+	llsp--; *llsp=c;
+	forthcall(makeatom(0,0x0b0519),makeatom(0,0x030f1205));
 }
 
 int main(int argc,char *argv[]) {

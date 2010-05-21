@@ -34,6 +34,7 @@ cmpb::3A 06
 storeb::8A 0E 88 08 48 AD 48 AD
 init:300#,
 find:@>0?,={,,0.} >20shrFFFFand ?,={,@.} 8%find
+key:dot
 
 draw|
 color:304#,
