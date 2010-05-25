@@ -55,7 +55,7 @@ int atom2idx(int16_t a, struct dict *d) {
 
 int makeatom(uint64_t pre,uint64_t nm) {
 	struct atom *p=atoms;
-	for(;p->name[1]||p->name[0];p++) {
+	for(;p->name[1];p++) {
 		if(p->name[0]==pre && p->name[1]==nm) {
 			return p-atoms;
 		}
