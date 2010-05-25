@@ -27,7 +27,9 @@ void sdl_poll() {
 			}
 
 #ifndef TEST
-			key(event.key.keysym.sym);
+			if(event.key.keysym.sym!=SDLK_LSHIFT) {
+				key(event.key.keysym.unicode&0x7F);
+			}
 #endif
 		default:
 		    break;
@@ -60,6 +62,8 @@ void sdl_init()
     SDL_SetColors(fontsf,&b,0,1);
     SDL_SetColors(fontsf,&g,0xe0,1);
     SDL_SetColors(fontsf,&w,255,1);
+
+    SDL_EnableUNICODE(1);
 }
 
 void sdl_clear() {
