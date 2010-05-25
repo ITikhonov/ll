@@ -25,6 +25,7 @@ shr::88 C1 48 D3 2E 48 AD
 -::48 29 06 48 AD
 dict:10#
 atoms:11#
+dumpatoms:5#,
 +::48 01 06 48 AD
 !::48 89 C3 48 AD
 @::48 8D 76 F8 48 89 06 48 89 D8
@@ -41,14 +42,14 @@ key:key\editor
 
 editor|
 init:et ete<
-key:ct+fb FFand "check tempatom "> FF00000000000000and,nz{8+}  ~^ >8shl or ~<
+key:ct+fb FFand "check tempatom8+> FF00000000000000t,nz{tempatom<0} 8shl or tempatom8+<
 tempatom:::00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
 type:1B?,_{,word$.} 2B?,_{,number$.} ,op$
-check:type op$?,={,pop.}  tempatom>FFand type ?,,={.} pop 
-pop:tempatom8+> tempatom> atoms!makeatom dot 0tempatom< 0tempatom8+<
-makeatom:@8+>0?,={@<.} ?,={~ @>?,={,,@atoms-.} ~} 10%makeatom
+check:tempatom8+>0?,,={,.} type op$?,={,pop.}  tempatom8+>FFand type ?,,={.} pop 
+pop:tempatom> tempatom8+> atoms!makeatom dumpatoms dot 0tempatom< 0tempatom8+<
+makeatom:@8+>0?,={, @8+< @< @atoms-4shr.} ?,={~ @>?,={,,@atoms-4shr.} ~} 10%makeatom
 
-draw:.
+draw:.tempatom>dot tempatom8+>dot cr
 
 ct:::00 FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 3D 2D 37 3C 3F FF FF FF FF FF 3A 2C 3B 2B FF 1B 1C 1D 1E 1F 20 21 22 23 24 35 FF 38 31 39 30 3E 25 26 27 28 29 2A FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 36 FF 2E 32 FF 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 10 11 12 13 14 15 16 17 18 19 1A 33 FF 34 2F FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF
 

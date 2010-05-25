@@ -53,6 +53,7 @@ uint64_t llkick(uint64_t f) {
 	case 0x2: dump(&dict); return 0;
 	case 0x3: soreload(); return 0;
 	case 0x4: need_compile=1; return 0;
+	case 0x5: dumpatoms(); return 0;
 	case 0x10: return (uint64_t)(dict->def);
 	case 0x11: return (uint64_t)(atoms);
 	default:
@@ -77,6 +78,7 @@ int main(int argc,char *argv[]) {
 	core[2]=makeatom(0,0x030f1205);
 
 	load(); dump();
+	dumpatoms();
 	soreload();
 	compile();
 

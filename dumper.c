@@ -42,7 +42,7 @@ void dump() {
 void dumpatoms() {
 	int i=0;
 	for(i=0;atoms[i].name[1]!=0;i++) {
-		printf("%4u:",i);
+		printf("%4x:",i);
 		print_atom(i);
 		printf(" %08lx,%08lx\n",atoms[i].name[0],atoms[i].name[1]);
 	}
