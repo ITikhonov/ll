@@ -38,3 +38,13 @@ static void dump1(struct dict *d) {
 void dump() {
 	dump1(dict);
 }
+
+void dumpatoms() {
+	int i=0;
+	for(i=0;atoms[i].name[1]!=0;i++) {
+		printf("%4u:",i);
+		print_atom(i);
+		printf(" %08lx,%08lx\n",atoms[i].name[0],atoms[i].name[1]);
+	}
+}
+
