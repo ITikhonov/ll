@@ -80,8 +80,8 @@ void load() {
 				}
 				nm=fromascii(*p); pre=0;
 			} else {
-				nm=(nm<<8)|fromascii(*p);
 				if(!pre&&(nm>>56)&0xff) { pre=nm; nm=0; }
+				nm=(nm<<8)|fromascii(*p);
 			}
 			tp=tc;
 		}
