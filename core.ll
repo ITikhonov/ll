@@ -36,14 +36,15 @@ cmpb::3A 06
 storeb::8A 0E 88 08 48 AD 48 AD
 init:300#, init\editor
 find:@>0?,={,,0.} >20shrFFFFand ?,={,@.} 8%find
-fb::8A 00
+fb::48 0F B6 00
 t::48 85 06
 key:key\editor
 sw::48 8B 0E 66 89 08 48 AD 48 AD
+fw::48 0F B7 00
 
 editor|
 init:8et> realloc "et< 8~<
-key:ct+fb FFand "check tempatom8+> FF00000000000000t,nz{tempatom<0} 8shl or tempatom8+<
+key:8?,={,delete.}  ct+fb "check tempatom8+> FF00000000000000t,nz{tempatom<0} 8shl or tempatom8+<
 tempatom:::00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
 type:1B?,_{,word$.} 2B?,_{,number$.} ,op$
 check:tempatom8+>0?,,={,.} type op$?,={,pop.}  tempatom8+>FFand type ?,,={.} pop 
@@ -51,8 +52,10 @@ pop:tempatom> tempatom8+> atoms!makeatom append 0tempatom< 0tempatom8+<
 makeatom:@8+>0?,={, @8+< @< @atoms-4shr.} ?,={~ @>?,={,,@atoms-4shr.} ~} 10%makeatom
 expand:et> ">2+ ~^~realloc ~^< et<
 append:expand et>">+2-sw
+shrink:et> ">2- ~^~realloc ~^< et<
+delete:et>"> 8?,={,, 0tempatom< 0tempatom8+<.} +2-fw 4shl atoms+ ">tempatom< 8+>tempatom8+< shrink 
 
-draw: 80020cursor\draw< et>8+ et>">+ def\draw tempatom\editor datom\draw
+draw: 80020cursor\draw< et>8+ et>">+ def\draw tempatom\editor datom\draw FFchar\draw
 
 ct:::00 FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 40 3D 2D 37 3C 3F FF FF FF FF FF 3A 2C 3B 2B FF 1B 1C 1D 1E 1F 20 21 22 23 24 35 FF 38 31 39 30 3E 25 26 27 28 29 2A FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 36 FF 2E 32 FF 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 10 11 12 13 14 15 16 17 18 19 1A 33 FF 34 2F FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF
 
