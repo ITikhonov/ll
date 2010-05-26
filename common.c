@@ -33,7 +33,7 @@ int fromascii(char c) {
 	case '!': return 61;
 	case '@': return 62;
 	case '%': return 63;
-	case ' ':
+	case ' ': return 64;
 	case '\n': return 0;
 	default:
 		printf("\n!!! unknown symbol %u (%c)\n",c,c);
@@ -42,7 +42,7 @@ int fromascii(char c) {
 }
 
 char fromintr(uint8_t c) {
-	return " abcdefghijklmnopqrstuvwxyz0123456789ABCDEF.,\"^~?=_{}:\\#<>+-$!@%"[c];
+	return " abcdefghijklmnopqrstuvwxyz0123456789ABCDEF.,\"^~?=_{}:\\#<>+-$!@% "[c];
 }
 
 int atom2idx(int16_t a, struct dict *d) {
