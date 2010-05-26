@@ -18,7 +18,7 @@ kick.o: CFLAGS=-rdynamic -fPIC
 kick.so: kick.o opengl.o
 	$(CC) -shared -nostartfiles -o kick.so kick.o opengl.o
 
-state.ll: core.ll editor.ll
+state.ll: core.ll
 	cat core.ll > state.ll
 
 opengl.o: font.h
