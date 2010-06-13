@@ -227,6 +227,8 @@ static uint8_t *compile_def(uint8_t *pc, uint16_t *def, struct dict *d, uint16_t
 				pc=compile_inline(pc,sdef);
 			} else if(sdef[1]==makeatom(0,0x04011401)) { // data
 				pc=compile_data(pc,sdef);
+			} else if(sdef[1]==makeatom(0,0x04090314)) { // dict
+				pc=compile_data(pc,sdef);
 			} else {
 				printf("unknown type ");
 				print_atom(sdef[1]);

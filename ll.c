@@ -56,6 +56,8 @@ uint64_t llkick(uint64_t f) {
 	case 0x5: dumpatoms(); return 0;
 	case 0x10: return (uint64_t)(dict->def);
 	case 0x11: return (uint64_t)(atoms);
+	case 0x12: { uint64_t a=*llsp++; forthcall(*llsp++,a);
+		     return 0; }
 	default:
 		if(kick_so) return kick_so(f);
 	}

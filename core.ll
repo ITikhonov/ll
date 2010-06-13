@@ -1,4 +1,4 @@
-main:301#,302#,100008cursor\draw< core$dict\draw draw\editor
+main:301#,302#,draw\draw
 char:104#,
 cr:Achar
 dot:102#,
@@ -41,10 +41,13 @@ t::48 85 06
 key:key\editor
 sw::48 8B 0E 66 89 08 48 AD 48 AD
 fw::48 0F B7 00
+execute:12#,
+defs:
 
 editor|
-init:8et> realloc "et< 8~<
-key:8?,={,delete.}  ct+fb "check tempatom8+> FF00000000000000t,nz{tempatom<0} 8shl or tempatom8+<
+init:clear core$current<
+clear:8et> realloc "et< 8~<
+key:8?,={,delete.} D?,={,command.} ct+fb "check tempatom8+> FF00000000000000t,nz{tempatom<0} 8shl or tempatom8+<
 tempatom:::00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
 type:1B?,_{,word$.} 2B?,_{,number$.} ,op$
 check:tempatom8+>0?,,={,.} type op$?,={,pop.}  tempatom8+>FFand type ?,,={.} pop 
@@ -54,12 +57,17 @@ expand:et> ">2+ ~^~realloc ~^< et<
 append:expand et>">+2-sw
 shrink:et> ">2- ~^~realloc ~^< et<
 delete:et>"> 8?,={,, 0tempatom< 0tempatom8+<.} +2-fw 4shl atoms+ ">tempatom< 8+>tempatom8+< shrink 
+command:tempatom8+>0?,,nz{pop} et>8+fw cmd$execute clear
 
 draw: 80020cursor\draw< et>8+ et>">+ def\draw tempatom\editor datom\draw FFchar\draw
+current:::00 00 00 00 00 00 00 00
 
 ct:::00 FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 40 3D 2D 37 3C 3F FF FF FF FF FF 3A 2C 3B 2B FF 1B 1C 1D 1E 1F 20 21 22 23 24 35 FF 38 31 39 30 3E 25 26 27 28 29 2A FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 36 FF 2E 32 FF 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 10 11 12 13 14 15 16 17 18 19 1A 33 FF 34 2F FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF
 
 et:::00 00 00 00 00 00 00 00
+
+cmd|
+r:
 
 draw|
 color:304#,
@@ -78,4 +86,5 @@ line:cursor>100000+FFFF0000and8+cursor<
 list:">0?,={,,.}word line 8+list
 x:cursor>FFFF0000and+cursor<
 dict:dict\core!find>8+ list\draw
+draw:100008cursor< current\editor>dict draw\editor
 
