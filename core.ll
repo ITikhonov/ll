@@ -42,7 +42,7 @@ key:key\editor
 sw::48 8B 0E 66 89 08 48 AD 48 AD
 fw::48 0F B7 00
 execute:12#,
-defs:
+def:dict\core!find>8+
 
 editor|
 init:clear core$current<
@@ -67,7 +67,12 @@ ct:::00 FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 
 et:::00 00 00 00 00 00 00 00
 
 cmd|
-r:
+r:et\editor>C+fw current\editor>def!find "resize copy
+d:et\editor>C+fw current\editor<
+
+resize:et\editor>>E-^>^8+~realloc ~^sw ~<
+copy:>8+ et\editor>"! >@+ E% memcopyw
+memcopyw:@?,={,,.}~ @fw ^sw 2+2% ~memcopyw
 
 draw|
 color:304#,
