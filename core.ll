@@ -47,7 +47,7 @@ def:dict\core!find>8+
 editor|
 init:clear core$current<
 clear:8et> realloc "et< 8~<
-key:8?,={,delete.} D?,={,command.} ct+fb "check tempatom8+> FF00000000000000t,nz{tempatom<0} 8shl or tempatom8+<
+key:8?,={,delete.} D?,={,command.} 20?,={,pop.} ct+fb "check tempatom8+> FF00000000000000t,nz{tempatom<0} 8shl or tempatom8+<
 tempatom:::00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
 type:1B?,_{,word$.} 2B?,_{,number$.} ,op$
 check:tempatom8+>0?,,={,.} type op$?,={,pop.}  tempatom8+>FFand type ?,,={.} pop 
@@ -67,11 +67,11 @@ ct:::00 FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 
 et:::00 00 00 00 00 00 00 00
 
 cmd|
-r:et\editor>C+fw current\editor>def!find "resize copy
-d:et\editor>C+fw current\editor<
+r:et\editor>A+fw current\editor>def!find "resize copy
+d:et\editor>A+fw current\editor<
 
-resize:et\editor>>E-^>^8+~realloc ~^sw ~<
-copy:>8+ et\editor>"! >@+ E% memcopyw
+resize:et\editor>>C-^>^8+~realloc ~^sw ~<
+copy:>8+ et\editor>"! >@+ C% memcopyw
 memcopyw:@?,={,,.}~ @fw ^sw 2+2% ~memcopyw
 
 draw|
