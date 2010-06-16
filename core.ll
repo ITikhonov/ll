@@ -1,4 +1,4 @@
-main:301#,302#,draw\draw
+main:301#,302#,draw\draw 
 char:104#,
 cr:Achar
 dot:102#,
@@ -34,7 +34,7 @@ realloc:204#
 compile:4#,
 cmpb::3A 06
 storeb::8A 0E 88 08 48 AD 48 AD
-init:300#, init\editor
+init:300#, init\editor save\save
 find:@>0?,={,,0.} >20shrFFFFand ?,={,@.} 8%find
 fb::48 0F B6 00
 t::48 85 06
@@ -92,4 +92,18 @@ list:">0?,={,,.}word line 8+list
 x:cursor>FFFF0000and+cursor<
 dict:dict\core!find>8+ list\draw
 draw:100008cursor< current\editor>dict draw\editor
+
+save|
+save:open atoms\core!atoms close
+
+atoms:@8+>0?,={.} 41write @>qw qw Awrite 10%atoms
+
+qw:"20shr dw dw
+dw:"10shr w w
+w:"8shr b b
+b:FFand "4shr 41+write Fand 41+write
+
+open:20#,
+close:21#,
+write:22#,
 

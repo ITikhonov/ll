@@ -43,6 +43,33 @@ h3. Current goals
 *** Save.
 * JS interpreter.
 
+h3. Memory
+
+There is a dictionary @dict@ defined in common.c. It holds 512 pointers.
+
+Each pointer is a memory block starting with 8-byte header. First two bytes are
+length of memory block minus header, next two bytes are type of word, third two
+bytes are index of atom. Last two bytes are unused.
+
+Rest of memory block is depended on word type. For ordinary word it is an array of
+atom indices. For dictionary it is a 512 pointers. For inline and data words it is
+an array of bytes.
+
+Dictionary @dict@ contains pointer to itself with @core@ atom.
+
+h3. Saving
+
+First we dump atoms - letter 'A' and 16 bytes for atom name.
+
+Then we dump dictionary. For each word in dictionary dump letter 'W' and memory block for this word.
+
+For words we simply dump memory block + dictionary atom it in.
+
+h3. Loading
+
+Letter 'A' commands to load atom. Letter 'W' commands to load word. Letter 'F' marks end of image.
+Letter 'D' marks dictionary. Letter '.' marks end of dictionary.
+
 h3. Quick Reference
 
 Consecutive lower case letters (a-z) describe word, digits and uppercase describe hex number (0-9A-F).

@@ -47,6 +47,8 @@ void soreload() {
 
 int need_compile=0;
 
+int imagefd=-1;
+
 uint64_t llkick(uint64_t f) {
 	switch(f){
 	case 0x1: load(); return 0;
@@ -58,6 +60,10 @@ uint64_t llkick(uint64_t f) {
 	case 0x11: return (uint64_t)(atoms);
 	case 0x12: { uint64_t a=*llsp++; forthcall(*llsp++,a);
 		     return 0; }
+
+	case 0x20: imagefd=open("image",O_CREAT|O_TRUNC|O_WRONLY,0644); break;
+	case 0x21: close(imagefd); break;
+	case 0x22: write(imagefd,llsp,1); llsp++; break;
 	default:
 		if(kick_so) return kick_so(f);
 	}
