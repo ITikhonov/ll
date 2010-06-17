@@ -33,7 +33,7 @@ dumpatoms:5#,
 realloc:204#
 compile:4#,
 cmpb::3A 06
-storeb::8A 0E 88 08 48 AD 48 AD
+sb::8A 0E 88 08 48 AD 48 AD
 init:300#, init\editor save\save
 find:@>0?,={,,0.} >20shrFFFFand ?,={,@.} 8%find
 fb::48 0F B6 00
@@ -94,14 +94,17 @@ dict:dict\core!find>8+ list\draw
 draw:100008cursor< current\editor>dict draw\editor
 
 save|
-save:open atoms\core!atoms close
+save:open atoms\core!atoms dict\core dict close
 
-atoms:@8+>0?,={.} 41write @>qw qw Awrite 10%atoms
+atoms:@8+>0?,,={.} 41write qw qw Awrite atoms
+dict:">0?,={,,.} word 8+dict
+word:57write !@fw8+@+ block Awrite
 
-qw:"20shr dw dw
-dw:"10shr w w
-w:"8shr b b
-b:FFand "4shr 41+write Fand 41+write
+block:@?,={,.} b block
+qw:dw dw
+dw:w w
+w:b b
+b:@fb "4shr41+write Fand41+write 1%
 
 open:20#,
 close:21#,

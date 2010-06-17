@@ -32,3 +32,4 @@ clean:
 
 test_opengl: opengl.c font.h
 	gcc $(CFLAGS) -o test_opengl -DTEST opengl.c $(LDFLAGS)
+
