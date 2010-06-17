@@ -64,6 +64,11 @@ uint64_t llkick(uint64_t f) {
 	case 0x20: imagefd=open("image",O_CREAT|O_TRUNC|O_WRONLY,0644); break;
 	case 0x21: close(imagefd); break;
 	case 0x22: write(imagefd,llsp,1); llsp++; break;
+
+	case 0x30: imagefd=open("image",O_RDONLY,0644); break;
+	case 0x31: close(imagefd); break;
+	case 0x32: {uint8_t c; return (read(imagefd,&c,1)==1)?c:-1;}
+
 	default:
 		if(kick_so) return kick_so(f);
 	}

@@ -34,7 +34,7 @@ realloc:204#
 compile:4#,
 cmpb::3A 06
 sb::8A 0E 88 08 48 AD 48 AD
-init:300#, init\editor save\save
+init:300#, init\editor load\load
 find:@>0?,={,,0.} >20shrFFFFand ?,={,@.} 8%find
 fb::48 0F B6 00
 t::48 85 06
@@ -97,7 +97,7 @@ save|
 save:open atoms\core!atoms dict\core dict close
 
 atoms:@8+>0?,,={.} 41write qw qw Awrite atoms
-dict:">0?,={,,.} word 8+dict
+dict:">0?,={,,.} "2+fw dict$?,,={"4+fw core$?,,nz{44write "4+!w Awrite 8+dict 2EwriteAwrite 8+dict.} ,8+dict.} word 8+dict
 word:57write !@fw8+@+ block Awrite
 
 block:@?,={,.} b block
@@ -109,4 +109,27 @@ b:@fb "4shr41+write Fand41+write 1%
 open:20#,
 close:21#,
 write:22#,
+
+load|
+trans:::00 00 00 00 00 00 00 00
+etrans:::00 00 00 00 00 00 00 00
+inittrans:1000trans>realloc "trans< etrans<
+freetrans:::0trans>realloc
+
+load:inittrans open readall close freetrans
+readall: read FFFFFFFFFFFFFFFF?,={,.} 41?,={atom.} 57?,={,word.} 44?,={,dict.} 2E?,={,end.} readall
+
+atom:etrans> qw qw atoms!makeatom\editor ^sw 2+etrans<
+word:
+dict:
+end:
+
+qw:dw dw 20shl or
+dw:w w 10shl or
+w:b b 8shl or
+b:read41-4shl read41-or
+
+open:30#,
+close:31#,
+read:32#
 
