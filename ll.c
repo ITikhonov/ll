@@ -49,7 +49,30 @@ int need_compile=0;
 
 int imagefd=-1;
 
+char *atom2str(uint16_t a, char s[17]) {
+	uint64_t n=atoms[a].name[0];
+	char *p=s;
+	int i;
+
+	for(i=56;i>=0;i-=8) {
+		printf("OPEN %d %lx %x\n",i,(n>>i)&0xff,fromintr((n>>i)&0xff));
+		uint8_t c=n>>i;
+		if(c) *p++=fromintr(c);
+	}
+	n=atoms[a].name[1];
+	for(i=56;i>=0;i-=8) {
+		printf("OPEN %d %lx %x\n",i,(n>>i)&0xff,fromintr((n>>i)&0xff));
+		uint8_t c=n>>i;
+		if(c) *p++=fromintr(c);
+	}
+	*p=0;
+
+	printf("OPEN %016lx:%016lx '%s'\n",atoms[a].name[0],atoms[a].name[1], s);
+	return s;
+}
+
 uint64_t llkick(uint64_t f) {
+	char s[17];
 	switch(f){
 	case 0x1: load(); return 0;
 	case 0x2: dump(&dict); return 0;
@@ -61,11 +84,11 @@ uint64_t llkick(uint64_t f) {
 	case 0x12: { uint64_t a=*llsp++; forthcall(*llsp++,a);
 		     return 0; }
 
-	case 0x20: imagefd=open("image",O_CREAT|O_TRUNC|O_WRONLY,0644); break;
+	case 0x20: imagefd=open(atom2str(*llsp++,s),O_CREAT|O_TRUNC|O_WRONLY,0644); break;
 	case 0x21: close(imagefd); break;
 	case 0x22: write(imagefd,llsp,1); llsp++; break;
 
-	case 0x30: imagefd=open("image",O_RDONLY,0644); break;
+	case 0x30: imagefd=open(atom2str(*llsp++,s),O_RDONLY,0644); break;
 	case 0x31: close(imagefd); break;
 	case 0x32: {uint8_t c; return (read(imagefd,&c,1)==1)?c:-1;}
 

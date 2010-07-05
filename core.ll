@@ -97,7 +97,7 @@ dict:dict\core!find>8+ shift>+ list\draw
 draw:100008cursor< current\editor>dict draw\editor
 
 save|
-save:open atoms\core!atoms dict\core dict close
+save:image$open atoms\core!atoms dict\core dict close
 
 atoms:@8+>0?,,={.} 41write qw qw Awrite atoms
 dict:">0?,={,,.} "2+fw dict$?,,={"4+fw core$?,,nz{44write "4+!w Awrite 8+dict 2EwriteAwrite 8+dict.} ,8+dict.} word 8+dict
@@ -119,7 +119,7 @@ etrans:::00 00 00 00 00 00 00 00
 inittrans:1000trans>realloc "trans< etrans<
 freetrans:::0trans>realloc
 
-load:inittrans open readall close freetrans dumpatoms
+load:inittrans image$open readall close freetrans dumpatoms
 readall: read FFFFFFFFFFFFFFFF?,={,.} 41?,={atom readall.} 57?,={,word.} 44?,={,dict.} 2E?,={,end.} readall
 
 atom:etrans> qw qw read, atoms!makeatom\editor ^sw 2+etrans<
