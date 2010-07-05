@@ -69,12 +69,15 @@ et:::00 00 00 00 00 00 00 00
 cmd|
 r:et\editor>A+fw current\editor>def!find "resize copy
 d:et\editor>A+fw current\editor<
+m:shift\draw">40+~<
+n:shift\draw"> 0?,={,.}40-~<
 
 resize:et\editor>>C-^>^8+~realloc ~^sw ~<
 copy:>8+ et\editor>"! >@+ C% memcopyw
 memcopyw:@?,={,,.}~ @fw ^sw 2+2% ~memcopyw
 
 draw|
+shift:::00 00 00 00 00 00 00 00
 color:304#,
 cursor:::00 00 00 00 00 00 00 00
 char:cursor>~303#1+advance
@@ -90,7 +93,7 @@ word:" >"name 40x "FFFFand ~10shrFFFFand forth$?,={,forth.},,,
 line:cursor>100000+FFFF0000and8+cursor<
 list:">0?,={,,.}word line 8+list
 x:cursor>FFFF0000and+cursor<
-dict:dict\core!find>8+ list\draw
+dict:dict\core!find>8+ shift>+ list\draw
 draw:100008cursor< current\editor>dict draw\editor
 
 save|
