@@ -120,13 +120,18 @@ load:inittrans open readall close freetrans dumpatoms
 readall: read FFFFFFFFFFFFFFFF?,={,.} 41?,={atom readall.} 57?,={,word.} 44?,={,dict.} 2E?,={,end.} readall
 
 atom:etrans> qw qw read, atoms!makeatom\editor ^sw 2+etrans<
-word:qw alloc type read name bind
+word:qw bind alloc type name content
 dict:
 end:
 
-alloc:"FFFFand"8+realloc
+bind:"FFFFand~ "20shrFFFFand translate ~^ dict\core!find
+alloc:^FFFFand8+ ^>realloc !@~< "@< 2%
+type:10shrFFFFand translate @sw2%
+name:@sw4%
+content:@+lcontent
+lcontent:@?={,,.}w translate~sw 2%lcontent
 
-translate:trans>1shl+fw
+translate:1shl trans>+fw
 
 qw:dw dw 20shl or
 dw:w w 10shl or
