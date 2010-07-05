@@ -72,6 +72,7 @@ d:et\editor>A+fw current\editor<
 m:shift\draw">40+~<
 n:shift\draw"> 0?,={,.}40-~<
 load:et\editor>A+fw load\load
+save:et\editor>A+fw save\save
 c:et\editor>A+fw create
 
 resize:et\editor>>C-^>^8+~realloc ~^sw ~<
@@ -101,7 +102,7 @@ dict:dict\core!find>8+ shift>+ list\draw
 draw:100008cursor< current\editor>dict draw\editor
 
 save|
-save:image$open atoms\core!atoms dict\core dict close
+save:"open atoms\core!atoms current\editor>def dict close
 
 atoms:@8+>0?,,={.} 41write qw qw Awrite atoms
 dict:">0?,={,,.} "2+fw dict$?,,={"4+fw core$?,,nz{44write "4+!w Awrite 8+dict 2EwriteAwrite 8+dict.} ,8+dict.} word 8+dict
