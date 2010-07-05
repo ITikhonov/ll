@@ -35,7 +35,7 @@ compile:4#,
 cmpb::3A 06
 sb::8A 0E 88 08 48 AD 48 AD
 init:300#, init\editor load\load
-find:@>0?,={,,0.} >20shrFFFFand ?,={,@.} 8%find
+find:@>0?,={,,@.} >20shrFFFFand ?,={,@.} 8%find
 fb::48 0F B6 00
 t::48 85 06
 key:key\editor
@@ -116,13 +116,17 @@ etrans:::00 00 00 00 00 00 00 00
 inittrans:1000trans>realloc "trans< etrans<
 freetrans:::0trans>realloc
 
-load:inittrans open readall close freetrans
-readall: read FFFFFFFFFFFFFFFF?,={,.} 41?,={atom.} 57?,={,word.} 44?,={,dict.} 2E?,={,end.} readall
+load:inittrans open readall close freetrans dumpatoms
+readall: read FFFFFFFFFFFFFFFF?,={,.} 41?,={atom readall.} 57?,={,word.} 44?,={,dict.} 2E?,={,end.} readall
 
-atom:etrans> qw qw atoms!makeatom\editor ^sw 2+etrans<
-word:
+atom:etrans> qw qw read, atoms!makeatom\editor ^sw 2+etrans<
+word:qw alloc type read name bind
 dict:
 end:
+
+alloc:"FFFFand"8+realloc
+
+translate:trans>1shl+fw
 
 qw:dw dw 20shl or
 dw:w w 10shl or
