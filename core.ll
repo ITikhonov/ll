@@ -34,7 +34,7 @@ realloc:204#
 compile:4#,
 cmpb::3A 06
 sb::8A 0E 88 08 48 AD 48 AD
-init:300#, init\editor load\load
+init:300#, init\editor
 find:@>0?,={,,@.} >20shrFFFFand ?,={,@.} 8%find
 fb::48 0F B6 00
 t::48 85 06
@@ -71,10 +71,14 @@ r:et\editor>A+fw current\editor>def!find "resize copy
 d:et\editor>A+fw current\editor<
 m:shift\draw">40+~<
 n:shift\draw"> 0?,={,.}40-~<
+load:et\editor>A+fw load\load
+c:et\editor>A+fw create
 
 resize:et\editor>>C-^>^8+~realloc ~^sw ~<
 copy:>8+ et\editor>"! >@+ C% memcopyw
 memcopyw:@?,={,,.}~ @fw ^sw 2+2% ~memcopyw
+create:"dict\core!find">1008~realloc! @~< 20shl dict$10shl 1000 or or stack @< 8% @1000+clear 2#,
+clear:@?={,,.} 0~< 8%clear
 
 draw|
 shift:::00 00 00 00 00 00 00 00
@@ -119,7 +123,7 @@ etrans:::00 00 00 00 00 00 00 00
 inittrans:1000trans>realloc "trans< etrans<
 freetrans:::0trans>realloc
 
-load:inittrans image$open readall close freetrans dumpatoms
+load:inittrans open readall close freetrans dumpatoms
 readall: read FFFFFFFFFFFFFFFF?,={,.} 41?,={atom readall.} 57?,={,word.} 44?,={,dict.} 2E?,={,end.} readall
 
 atom:etrans> qw qw read, atoms!makeatom\editor ^sw 2+etrans<
@@ -127,7 +131,7 @@ word:qw bind alloc type name content
 dict:
 end:
 
-bind:"FFFFand~ "20shrFFFFand translate ~^ dict\core!find
+bind:"FFFFand~ "20shrFFFFand translate ~^ current\editor>def!find
 alloc:^FFFFand8+ ^>realloc !@~< "@< 2%
 type:10shrFFFFand translate @sw2%
 name:@sw4%
