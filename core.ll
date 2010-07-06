@@ -70,16 +70,19 @@ cmd|
 r:et\editor>A+fw current\editor>def!find "resize copy
 d:et\editor>A+fw current\editor<
 m:shift\draw">40+~<
-n:shift\draw"> 0?,={,.}40-~<
+k:shift\draw"> 0?,={,.}40-~<
 load:et\editor>A+fw load\load
 save:et\editor>A+fw save\save
-c:et\editor>A+fw create
+n:et\editor>A+fw create
+c:compile\core
+v:et\editor>A+fw var
 
 resize:et\editor>>C-^>^8+~realloc ~^sw ~<
 copy:>8+ et\editor>"! >@+ C% memcopyw
 memcopyw:@?,={,,.}~ @fw ^sw 2+2% ~memcopyw
-create:"dict\core!find">1008~realloc! @~< 20shl dict$10shl 1000 or or stack @< 8% @1000+clear 2#,
+create:"current\editor< "dict\core!find">1008~realloc! @~< 20shl dict$10shl 1000 or or @< 8% @1000+clear
 clear:@?={,,.} 0~< 8%clear
+var:"current\editor>def!find">10~realloc! @~< stack 20shl data$10shl 8 or or @< 2#,
 
 draw|
 shift:::00 00 00 00 00 00 00 00
